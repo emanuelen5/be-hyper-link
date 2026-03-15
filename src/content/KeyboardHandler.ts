@@ -160,8 +160,12 @@ export class KeyboardHandler {
     }
 
     if (e.key === 'Backspace') {
-      this.typed = this.typed.slice(0, -1);
-      this.updateOverlay();
+      if (this.typed.length === 0) {
+        this.deactivate();
+      } else {
+        this.typed = this.typed.slice(0, -1);
+        this.updateOverlay();
+      }
       return;
     }
 
