@@ -17,6 +17,11 @@ function isFocusedOnInput(): boolean {
   return false;
 }
 
+function interceptEvent(e: KeyboardEvent) {
+  e.preventDefault();
+  e.stopPropagation();
+}
+
 export class KeyboardHandler {
   private state: State = 'idle';
   private settings: Settings;
@@ -141,15 +146,11 @@ export class KeyboardHandler {
     }
 
     // Active or typing state
-    e.preventDefault();
-    e.stopPropagation();
 
     if (e.key === 'Escape') {
       this.deactivate();
       return;
-    }
-
-    if (e.key === 'Enter') {
+    } else if (e.key === 'Enter') {
       const matches = this.links.filter((l) =>
         labelsMatch(l.label, this.typed),
       );
@@ -157,9 +158,7 @@ export class KeyboardHandler {
         this.followLink(matches[0].element);
       }
       return;
-    }
-
-    if (e.key === 'Backspace') {
+    } else if (e.key === 'Backspace') {
       if (this.typed.length === 0) {
         this.deactivate();
       } else {
@@ -167,15 +166,17 @@ export class KeyboardHandler {
         this.updateOverlay();
       }
       return;
+    } else if (e.key.length === 1 && e.key >= 'a' && e.key <= 'z') {
+      if (this.settings.navigationMode === 'keyboard-region') {
+        this.handleKeyboardRegionKey(e.key);
+      } else {
+        this.handleSequentialKey(e.key);
+      }
+    } else { // Non-handled key, just ignore and don't intercept
+      return;
     }
 
-    if (e.key.length !== 1) return;
-
-    if (this.settings.navigationMode === 'keyboard-region') {
-      this.handleKeyboardRegionKey(e.key);
-    } else {
-      this.handleSequentialKey(e.key);
-    }
+    interceptEvent(e);
   }
 
   private handleSequentialKey(key: string): void {
