@@ -39,9 +39,12 @@ Firefox browser extension for keyboard-based link navigation. TypeScript + React
 - Add UI controls in `src/popup/Popup.tsx`
 
 ## Build
-- `npm run build` — production webpack bundle into `dist/`
-- `npm run build:dev` — development bundle with source maps
-- Entry points: `content`, `background`, `popup` (each self-contained, no shared runtime chunk)
+- `npm run build` — production Vite build into `dist/`
+- `npm run build:dev` — development build with source maps
+- Build is powered by `vite` + `vite-plugin-web-extension` + `@vitejs/plugin-react`
+- Entry points are auto-detected from `manifest.json` by `vite-plugin-web-extension`
+- `manifest.json` at the project root references source files (e.g. `src/content/index.tsx`); the plugin rewrites paths in the output manifest to point to the built files
+- Static assets (icons) live in `public/` and are copied to `dist/` unchanged
 
 ## Future: Form Navigation
 The architecture supports form navigation (inputs, textareas, selects). When implementing:
