@@ -1,3 +1,7 @@
+import { labelsMatch } from '../utils/label-utils';
+
+export { labelsMatch };
+
 const CHARS = 'abcdefghijklmnopqrstuvwxyz';
 
 /**
@@ -17,8 +21,4 @@ function toLabel(n: number, chars: string): string {
   const len = chars.length;
   if (n < len) return chars[n];
   return toLabel(Math.floor(n / len) - 1, chars) + chars[n % len];
-}
-
-export function labelsMatch(label: string, typed: string): boolean {
-  return label.startsWith(typed);
 }

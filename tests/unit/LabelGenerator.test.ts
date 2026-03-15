@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateLabels, labelsMatch } from '../../src/content/LabelGenerator';
+import { filterLabels } from '../../src/utils/label-utils';
 
 describe('generateLabels', () => {
   it('generates single-letter labels for the first 26', () => {
@@ -49,5 +50,34 @@ describe('labelsMatch', () => {
 
   it('always matches empty typed string', () => {
     expect(labelsMatch('abc', '')).toBe(true);
+  });
+});
+
+describe('filterLabels', () => {
+  const items = [
+    { label: 'a', value: 1 },
+    { label: 'ab', value: 2 },
+    { label: 'b', value: 3 },
+    { label: 'ba', value: 4 },
+  ];
+
+  it('returns all items when typed is empty', () => {
+    expect(filterLabels(items, '')).toHaveLength(4);
+  });
+
+  it('filters to matching labels only', () => {
+    const result = filterLabels(items, 'a');
+    expect(result).toHaveLength(2);
+    expect(result.map((i) => i.label)).toEqual(['a', 'ab']);
+  });
+
+  it('returns empty array when nothing matches', () => {
+    expect(filterLabels(items, 'z')).toHaveLength(0);
+  });
+
+  it('handles exact match', () => {
+    const result = filterLabels(items, 'ba');
+    expect(result).toHaveLength(1);
+    expect(result[0].label).toBe('ba');
   });
 });
