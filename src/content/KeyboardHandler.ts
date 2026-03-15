@@ -28,10 +28,12 @@ export class KeyboardHandler {
   private regionLinks: HTMLAnchorElement[] | null = null;
 
   private boundKeydown: (e: KeyboardEvent) => void;
+  private boundScroll: () => void;
 
   constructor(settings: Settings) {
     this.settings = settings;
     this.boundKeydown = this.handleKeydown.bind(this);
+    this.boundScroll = this.handleScroll.bind(this);
     document.addEventListener('keydown', this.boundKeydown, { capture: true });
   }
 
@@ -44,6 +46,17 @@ export class KeyboardHandler {
       capture: true,
     });
     this.deactivate();
+  }
+
+  private handleScroll(): void {
+    this.refreshRects();
+    this.updateOverlay();
+  }
+
+  private refreshRects(): void {
+    for (const link of this.links) {
+      link.rect = link.element.getBoundingClientRect();
+    }
   }
 
   private activate(): void {
@@ -65,10 +78,15 @@ export class KeyboardHandler {
     );
     this.highlightManager.apply(this.links);
     this.overlay.render(this.links, this.typed);
+    window.addEventListener('scroll', this.boundScroll, {
+      capture: true,
+      passive: true,
+    });
     this.state = 'active';
   }
 
   private deactivate(): void {
+    window.removeEventListener('scroll', this.boundScroll, { capture: true });
     this.overlay?.destroy();
     this.overlay = null;
     this.highlightManager?.clear();
