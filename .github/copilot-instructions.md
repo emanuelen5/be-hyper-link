@@ -1,4 +1,4 @@
-# be-hyper-link Copilot Instructions
+# hyper-link Copilot Instructions
 
 ## Project Overview
 Firefox browser extension for keyboard-based link navigation. TypeScript + React, Manifest V2.

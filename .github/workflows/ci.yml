@@ -23,8 +23,8 @@ jobs:
       - name: Upload extension zip
         uses: actions/upload-artifact@v4
         with:
-          name: be-hyper-link
-          path: be-hyper-link.zip
+          name: hyper-link
+          path: hyper-link.zip
       - run: npm test
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

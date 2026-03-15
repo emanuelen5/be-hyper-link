@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import type { LinkInfo } from '../shared/types';
 
@@ -71,7 +70,7 @@ export class Overlay {
 
   constructor() {
     this.host = document.createElement('div');
-    this.host.id = 'be-hyper-link-overlay';
+    this.host.id = 'hyper-link-overlay';
     this.shadowRoot = this.host.attachShadow({ mode: 'open' });
 
     const container = document.createElement('div');

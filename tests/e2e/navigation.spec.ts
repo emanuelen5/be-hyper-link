@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import path from 'path';
 
 const fixturePath = path.resolve(
@@ -7,7 +7,7 @@ const fixturePath = path.resolve(
 );
 const fixtureUrl = `file://${fixturePath}`;
 
-test.describe('be-hyper-link navigation', () => {
+test.describe('hyper-link navigation', () => {
   test('fixture page loads with links', async ({ page }) => {
     await page.goto(fixtureUrl);
     const links = page.locator('a[href]');
@@ -16,7 +16,7 @@ test.describe('be-hyper-link navigation', () => {
 
   test('page title is correct', async ({ page }) => {
     await page.goto(fixtureUrl);
-    await expect(page).toHaveTitle('be-hyper-link test page');
+    await expect(page).toHaveTitle('hyper-link test page');
   });
 
   test('all links are visible', async ({ page }) => {

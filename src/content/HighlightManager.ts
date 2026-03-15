@@ -1,7 +1,7 @@
 import type { LinkInfo } from '../shared/types';
 
-const TINT_ID = 'be-hyper-link-tint';
-const BORDER_CLASS = 'be-hyper-link-border';
+const TINT_ID = 'hyper-link-tint';
+const BORDER_CLASS = 'hyper-link-border';
 
 /**
  * Applies a dim overlay and/or borders around links depending on settings.

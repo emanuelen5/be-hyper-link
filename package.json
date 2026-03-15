@@ -1,11 +1,11 @@
 {
-  "name": "be-hyper-link",
+  "name": "hyper-link",
   "version": "0.1.0",
   "description": "Navigate links using only the keyboard",
   "license": "GPL-3.0-only",
   "private": true,
   "scripts": {
-    "build": "vite build && cd dist && zip -r ../be-hyper-link.zip .",
+    "build": "vite build && cd dist && zip -r ../hyper-link.zip .",
     "build:dev": "vite build --mode development",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",

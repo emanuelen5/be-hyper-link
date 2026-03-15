@@ -25,7 +25,7 @@ export function Popup() {
 
   return (
     <div>
-      <h2 style={{ margin: '0 0 12px', fontSize: '16px' }}>be-hyper-link</h2>
+      <h2 style={{ margin: '0 0 12px', fontSize: '16px' }}>hyper-link</h2>
 
       <label style={labelStyle}>
         Navigation Mode
