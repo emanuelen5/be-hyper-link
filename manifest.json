@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "be-hyper-link",
+  "version": "0.1.0",
+  "description": "Navigate links using only the keyboard",
+  "icons": { "48": "icons/icon-48.svg", "96": "icons/icon-96.svg" },
+  "permissions": ["storage", "activeTab", "tabs"],
+  "browser_action": {
+    "default_popup": "src/popup/popup.html",
+    "default_title": "be-hyper-link settings"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/index.tsx"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "scripts": ["src/background/index.ts"]
+  }
+}
