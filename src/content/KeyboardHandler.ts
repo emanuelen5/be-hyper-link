@@ -187,7 +187,11 @@ export class KeyboardHandler {
       this.deactivate();
       return;
     }
-    if (matches.length === 1 && matches[0].label === this.typed) {
+    if (
+      matches.length === 1 &&
+      matches[0].label === this.typed &&
+      !this.settings.confirmBeforeFollow
+    ) {
       this.followLink(matches[0].element);
       return;
     }

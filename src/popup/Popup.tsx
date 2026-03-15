@@ -80,6 +80,20 @@ export function Popup() {
         Continuously search for links on scroll
       </label>
 
+      <label style={checkboxLabelStyle}>
+        <input
+          type="checkbox"
+          checked={settings.confirmBeforeFollow}
+          onChange={(e) =>
+            setSettings((s) => ({
+              ...s,
+              confirmBeforeFollow: e.target.checked,
+            }))
+          }
+        />
+        Confirm before following link
+      </label>
+
       <label style={labelStyle}>
         Trigger Key
         <input

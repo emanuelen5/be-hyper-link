@@ -5,6 +5,7 @@ export interface Settings {
   dimEnabled: boolean;
   borderEnabled: boolean;
   refreshLinksOnScroll: boolean;
+  confirmBeforeFollow: boolean;
   triggerKey: string;
 }
 
@@ -13,6 +14,7 @@ export const DEFAULT_SETTINGS: Settings = {
   dimEnabled: true,
   borderEnabled: false,
   refreshLinksOnScroll: false,
+  confirmBeforeFollow: false,
   triggerKey: 'f',
 };
 
