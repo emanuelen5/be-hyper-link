@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { DEFAULT_SETTINGS } from '../shared/types';
-import type { Settings, NavigationMode, HighlightMode } from '../shared/types';
+import type { Settings, NavigationMode } from '../shared/types';
 
 export function Popup() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -44,21 +44,26 @@ export function Popup() {
         </select>
       </label>
 
-      <label style={labelStyle}>
-        Highlight Mode
-        <select
-          value={settings.highlightMode}
+      <label style={checkboxLabelStyle}>
+        <input
+          type="checkbox"
+          checked={settings.dimEnabled}
           onChange={(e) =>
-            setSettings((s) => ({
-              ...s,
-              highlightMode: e.target.value as HighlightMode,
-            }))
+            setSettings((s) => ({ ...s, dimEnabled: e.target.checked }))
           }
-          style={selectStyle}
-        >
-          <option value="tint">Tint (dim page)</option>
-          <option value="border">Border (outline links)</option>
-        </select>
+        />
+        Dim page
+      </label>
+
+      <label style={checkboxLabelStyle}>
+        <input
+          type="checkbox"
+          checked={settings.borderEnabled}
+          onChange={(e) =>
+            setSettings((s) => ({ ...s, borderEnabled: e.target.checked }))
+          }
+        />
+        Border links
       </label>
 
       <label style={labelStyle}>
@@ -93,6 +98,13 @@ const selectStyle: React.CSSProperties = {
   borderRadius: '4px',
   border: '1px solid #ccc',
   fontSize: '13px',
+};
+
+const checkboxLabelStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  marginBottom: '10px',
 };
 
 const buttonStyle: React.CSSProperties = {

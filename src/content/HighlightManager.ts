@@ -1,25 +1,28 @@
-import type { HighlightMode, LinkInfo } from '../shared/types';
+import type { LinkInfo } from '../shared/types';
 
 const TINT_ID = 'be-hyper-link-tint';
 const BORDER_CLASS = 'be-hyper-link-border';
 
 /**
- * Applies a tint overlay or borders around links depending on highlight mode.
+ * Applies a dim overlay and/or borders around links depending on settings.
  */
 export class HighlightManager {
-  private mode: HighlightMode;
+  private dimEnabled: boolean;
+  private borderEnabled: boolean;
   private tintEl: HTMLElement | null = null;
   private borderedLinks: HTMLAnchorElement[] = [];
 
-  constructor(mode: HighlightMode) {
-    this.mode = mode;
+  constructor(dimEnabled: boolean, borderEnabled: boolean) {
+    this.dimEnabled = dimEnabled;
+    this.borderEnabled = borderEnabled;
   }
 
   apply(links: LinkInfo[]): void {
     this.clear();
-    if (this.mode === 'tint') {
+    if (this.dimEnabled) {
       this.applyTint();
-    } else if (this.mode === 'border') {
+    }
+    if (this.borderEnabled) {
       this.applyBorders(links);
     }
   }

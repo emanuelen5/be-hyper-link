@@ -1,15 +1,16 @@
 export type NavigationMode = 'sequential' | 'keyboard-region';
-export type HighlightMode = 'tint' | 'border';
 
 export interface Settings {
   navigationMode: NavigationMode;
-  highlightMode: HighlightMode;
+  dimEnabled: boolean;
+  borderEnabled: boolean;
   triggerKey: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   navigationMode: 'sequential',
-  highlightMode: 'tint',
+  dimEnabled: true,
+  borderEnabled: false,
   triggerKey: 'f',
 };
 

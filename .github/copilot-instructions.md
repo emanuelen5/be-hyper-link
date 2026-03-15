@@ -23,7 +23,7 @@ Firefox browser extension for keyboard-based link navigation. TypeScript + React
 - **React** for both the overlay (content script) and popup UI
 - **Manifest V2** for Firefox compatibility (MV3 has limited cross-browser support)
 - **Two navigation modes**: sequential (letter combos a, b, …, aa, ab, …) and keyboard-region (keyboard layout rows → vertical screen regions)
-- **Two highlight modes**: tint (dim everything except link labels) and border (outline each link)
+- **Two highlight toggles**: dim (dim everything except link labels) and border (outline each link), independently enabled
 - **Trigger key** (default: `f`) activates the overlay only when not focused on an input/textarea
 
 ## State Machine (KeyboardHandler)
@@ -35,7 +35,7 @@ Firefox browser extension for keyboard-based link navigation. TypeScript + React
 
 ## Adding New Modes
 - **Navigation modes**: implement logic in `src/content/KeyboardHandler.ts`; add type to `NavigationMode` in `src/shared/types.ts`
-- **Highlight modes**: implement in `src/content/HighlightManager.ts`; add type to `HighlightMode` in `src/shared/types.ts`
+- **Highlight modes**: implement in `src/content/HighlightManager.ts`; add boolean setting to `Settings` in `src/shared/types.ts`
 - Add UI controls in `src/popup/Popup.tsx`
 
 ## Build

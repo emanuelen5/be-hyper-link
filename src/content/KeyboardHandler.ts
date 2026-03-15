@@ -59,7 +59,10 @@ export class KeyboardHandler {
     this.typed = '';
     this.regionLinks = null;
     this.overlay = new Overlay();
-    this.highlightManager = new HighlightManager(this.settings.highlightMode);
+    this.highlightManager = new HighlightManager(
+      this.settings.dimEnabled,
+      this.settings.borderEnabled,
+    );
     this.highlightManager.apply(this.links);
     this.overlay.render(this.links, this.typed);
     this.state = 'active';
