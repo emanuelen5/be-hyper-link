@@ -2,10 +2,7 @@ import { generateLabels, labelsMatch } from './LabelGenerator';
 import { getVisibleLinks } from './LinkDetector';
 import { Overlay } from './Overlay';
 import { HighlightManager } from './HighlightManager';
-import {
-  getRegionForKey,
-  getRegionLinks,
-} from '../shared/keyboard-regions';
+import { getRegionForKey, getRegionLinks } from '../shared/keyboard-regions';
 import type { Settings, LinkInfo } from '../shared/types';
 
 type State = 'idle' | 'active' | 'typing';

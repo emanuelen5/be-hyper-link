@@ -15,10 +15,12 @@ export function Popup() {
   }, []);
 
   function handleSave() {
-    browser.runtime.sendMessage({ type: 'save-settings', settings }).then(() => {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1500);
-    });
+    browser.runtime
+      .sendMessage({ type: 'save-settings', settings })
+      .then(() => {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 1500);
+      });
   }
 
   return (
