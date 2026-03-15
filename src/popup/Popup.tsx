@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import type { NavigationMode, Settings } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
-import type { Settings, NavigationMode } from '../shared/types';
 
 export function Popup() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -64,6 +64,20 @@ export function Popup() {
           }
         />
         Border links
+      </label>
+
+      <label style={checkboxLabelStyle}>
+        <input
+          type="checkbox"
+          checked={settings.refreshLinksOnScroll}
+          onChange={(e) =>
+            setSettings((s) => ({
+              ...s,
+              refreshLinksOnScroll: e.target.checked,
+            }))
+          }
+        />
+        Continuously search for links on scroll
       </label>
 
       <label style={labelStyle}>

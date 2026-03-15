@@ -1,9 +1,9 @@
+import { getRegionForKey, getRegionLinks } from '../shared/keyboard-regions';
+import type { LinkInfo, Settings } from '../shared/types';
+import { HighlightManager } from './HighlightManager';
 import { generateLabels, labelsMatch } from './LabelGenerator';
 import { getVisibleLinks } from './LinkDetector';
 import { Overlay } from './Overlay';
-import { HighlightManager } from './HighlightManager';
-import { getRegionForKey, getRegionLinks } from '../shared/keyboard-regions';
-import type { Settings, LinkInfo } from '../shared/types';
 
 type State = 'idle' | 'active' | 'typing';
 
@@ -49,13 +49,41 @@ export class KeyboardHandler {
   }
 
   private handleScroll(): void {
-    this.refreshRects();
+    if (this.settings.refreshLinksOnScroll) {
+      this.refreshLinks();
+    } else {
+      this.refreshRects();
+    }
     this.updateOverlay();
   }
 
   private refreshRects(): void {
     for (const link of this.links) {
       link.rect = link.element.getBoundingClientRect();
+    }
+  }
+
+  private refreshLinks(): void {
+    const anchors = getVisibleLinks();
+    const existingElements = new Set(this.links.map((l) => l.element));
+    const newAnchors = anchors.filter((el) => !existingElements.has(el));
+
+    // Update rects for existing links
+    this.refreshRects();
+
+    if (newAnchors.length > 0) {
+      const newLabels = generateLabels(
+        this.links.length + newAnchors.length,
+      ).slice(this.links.length);
+
+      const newLinks: LinkInfo[] = newAnchors.map((el, i) => ({
+        element: el,
+        label: newLabels[i],
+        rect: el.getBoundingClientRect(),
+      }));
+
+      this.links.push(...newLinks);
+      this.highlightManager?.apply(this.links);
     }
   }
 
