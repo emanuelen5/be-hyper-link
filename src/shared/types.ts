@@ -12,7 +12,7 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   navigationMode: 'sequential',
   dimEnabled: true,
-  borderEnabled: false,
+  borderEnabled: true,
   refreshLinksOnScroll: false,
   confirmBeforeFollow: false,
   triggerKey: 'f',
