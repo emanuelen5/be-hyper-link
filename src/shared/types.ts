@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS: Settings = {
   borderEnabled: true,
   refreshLinksOnScroll: false,
   confirmBeforeFollow: false,
-  triggerKey: 'f',
+  triggerKey: '/',
 };
 
 export interface LinkInfo {
