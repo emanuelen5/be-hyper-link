@@ -2,6 +2,9 @@ import type { LinkInfo } from '../shared/types';
 
 const TINT_ID = 'hyper-link-tint';
 const BORDER_CLASS = 'hyper-link-border';
+const SEARCH_MATCH_CLASS = 'hyper-link-search-match';
+const SEARCH_FADED_CLASS = 'hyper-link-search-faded';
+const SEARCH_SELECTED_CLASS = 'hyper-link-search-selected';
 
 /**
  * Applies a dim overlay and/or borders around links depending on settings.
@@ -27,14 +30,60 @@ export class HighlightManager {
     }
   }
 
+  /**
+   * In search mode, all links get a border. Matched links are bright,
+   * non-matched links are faded. The selected link gets a special highlight.
+   */
+  applySearchHighlights(
+    allLinks: LinkInfo[],
+    matchedElements: Set<HTMLAnchorElement>,
+    selectedElement: HTMLAnchorElement | null,
+  ): void {
+    this.clearSearchHighlights();
+
+    for (const { element } of allLinks) {
+      if (element === selectedElement) {
+        element.style.outline = '3px solid #4CAF50';
+        element.style.outlineOffset = '1px';
+        element.classList.add(SEARCH_SELECTED_CLASS);
+      } else if (matchedElements.has(element)) {
+        element.style.outline = '2px solid #ffcc00';
+        element.classList.add(SEARCH_MATCH_CLASS);
+      } else {
+        element.style.outline = '2px solid rgba(255, 204, 0, 0.2)';
+        element.classList.add(SEARCH_FADED_CLASS);
+      }
+      this.borderedLinks.push(element);
+    }
+  }
+
+  private clearSearchHighlights(): void {
+    for (const link of this.borderedLinks) {
+      link.classList.remove(
+        SEARCH_MATCH_CLASS,
+        SEARCH_FADED_CLASS,
+        SEARCH_SELECTED_CLASS,
+      );
+      link.style.removeProperty('outline');
+      link.style.removeProperty('outline-offset');
+    }
+    this.borderedLinks = [];
+  }
+
   clear(): void {
     if (this.tintEl) {
       this.tintEl.remove();
       this.tintEl = null;
     }
     for (const link of this.borderedLinks) {
-      link.classList.remove(BORDER_CLASS);
+      link.classList.remove(
+        BORDER_CLASS,
+        SEARCH_MATCH_CLASS,
+        SEARCH_FADED_CLASS,
+        SEARCH_SELECTED_CLASS,
+      );
       link.style.removeProperty('outline');
+      link.style.removeProperty('outline-offset');
     }
     this.borderedLinks = [];
   }

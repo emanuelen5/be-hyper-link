@@ -1,11 +1,11 @@
 import { getRegionForKey, getRegionLinks } from '../shared/keyboard-regions';
-import type { LinkInfo, Settings } from '../shared/types';
+import type { LinkInfo, OverlayMode, Settings } from '../shared/types';
 import { HighlightManager } from './HighlightManager';
 import { generateLabels, labelsMatch } from './LabelGenerator';
 import { getVisibleLinks } from './LinkDetector';
 import { Overlay } from './Overlay';
 
-type State = 'idle' | 'active' | 'typing';
+type State = 'idle' | 'active' | 'typing' | 'searching' | 'search-selecting';
 
 const INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT', 'CONTENTEDITABLE']);
 
@@ -22,6 +22,16 @@ function interceptEvent(e: KeyboardEvent) {
   e.stopPropagation();
 }
 
+function getLinkText(element: HTMLAnchorElement): string {
+  return (element.textContent ?? '').trim().toLowerCase();
+}
+
+function searchLinks(links: LinkInfo[], query: string): LinkInfo[] {
+  if (!query) return links;
+  const q = query.toLowerCase();
+  return links.filter((l) => getLinkText(l.element).includes(q));
+}
+
 export class KeyboardHandler {
   private state: State = 'idle';
   private settings: Settings;
@@ -31,6 +41,9 @@ export class KeyboardHandler {
   private highlightManager: HighlightManager | null = null;
   // For keyboard-region mode: first key selects region
   private regionLinks: HTMLAnchorElement[] | null = null;
+  // For search mode
+  private searchQuery = '';
+  private searchSelectedIndex = -1;
 
   private boundKeydown: (e: KeyboardEvent) => void;
   private boundScroll: () => void;
@@ -104,13 +117,15 @@ export class KeyboardHandler {
 
     this.typed = '';
     this.regionLinks = null;
+    this.searchQuery = '';
+    this.searchSelectedIndex = -1;
     this.overlay = new Overlay();
     this.highlightManager = new HighlightManager(
       this.settings.dimEnabled,
       this.settings.borderEnabled,
     );
     this.highlightManager.apply(this.links);
-    this.overlay.render(this.links, this.typed);
+    this.overlay.render(this.links, { kind: 'label', typed: '' });
     window.addEventListener('scroll', this.boundScroll, {
       capture: true,
       passive: true,
@@ -127,7 +142,17 @@ export class KeyboardHandler {
     this.links = [];
     this.typed = '';
     this.regionLinks = null;
+    this.searchQuery = '';
+    this.searchSelectedIndex = -1;
     this.state = 'idle';
+  }
+
+  private enterSearchMode(): void {
+    this.state = 'searching';
+    this.searchQuery = '';
+    this.searchSelectedIndex = -1;
+    this.updateSearchHighlights();
+    this.updateOverlay();
   }
 
   private handleKeydown(e: KeyboardEvent): void {
@@ -145,10 +170,24 @@ export class KeyboardHandler {
       return;
     }
 
+    if (this.state === 'searching') {
+      this.handleSearchKeydown(e);
+      return;
+    }
+
+    if (this.state === 'search-selecting') {
+      this.handleSearchSelectingKeydown(e);
+      return;
+    }
+
     // Active or typing state
 
     if (e.key === 'Escape') {
       this.deactivate();
+      return;
+    } else if (e.key === this.settings.searchKey) {
+      interceptEvent(e);
+      this.enterSearchMode();
       return;
     } else if (e.key === 'Enter') {
       const matches = this.links.filter((l) =>
@@ -178,6 +217,130 @@ export class KeyboardHandler {
     }
 
     interceptEvent(e);
+  }
+
+  private handleSearchKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Escape') {
+      interceptEvent(e);
+      this.deactivate();
+      return;
+    }
+
+    if (e.key === 'Enter') {
+      interceptEvent(e);
+      const matches = searchLinks(this.links, this.searchQuery);
+      if (matches.length >= 1) {
+        // Enter search-selecting mode to tab through matches
+        this.state = 'search-selecting';
+        this.searchSelectedIndex = 0;
+        this.updateSearchHighlights();
+        this.updateOverlay();
+      }
+      return;
+    }
+
+    if (e.key === 'Backspace') {
+      interceptEvent(e);
+      if (this.searchQuery.length === 0) {
+        // Go back to active/label mode
+        this.state = 'active';
+        this.highlightManager?.apply(this.links);
+        this.updateOverlay();
+      } else {
+        this.searchQuery = this.searchQuery.slice(0, -1);
+        this.updateSearchHighlights();
+        this.updateOverlay();
+      }
+      return;
+    }
+
+    // Accept any printable character for search
+    if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      interceptEvent(e);
+      this.searchQuery += e.key;
+      const matches = searchLinks(this.links, this.searchQuery);
+      if (matches.length === 1) {
+        // Single match: highlight it green and wait for Enter
+        this.state = 'search-selecting';
+        this.searchSelectedIndex = 0;
+        this.updateSearchHighlights();
+        this.updateOverlay();
+        return;
+      }
+      this.updateSearchHighlights();
+      this.updateOverlay();
+      return;
+    }
+
+    // Ignore other keys
+    interceptEvent(e);
+  }
+
+  private handleSearchSelectingKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Escape') {
+      interceptEvent(e);
+      this.deactivate();
+      return;
+    }
+
+    const matches = searchLinks(this.links, this.searchQuery);
+    if (matches.length === 0) {
+      interceptEvent(e);
+      this.deactivate();
+      return;
+    }
+
+    if (e.key === 'Backspace') {
+      interceptEvent(e);
+      this.state = 'searching';
+      this.searchSelectedIndex = -1;
+      if (this.searchQuery.length > 0) {
+        this.searchQuery = this.searchQuery.slice(0, -1);
+      }
+      this.updateSearchHighlights();
+      this.updateOverlay();
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      interceptEvent(e);
+      if (e.shiftKey) {
+        this.searchSelectedIndex =
+          (this.searchSelectedIndex - 1 + matches.length) % matches.length;
+      } else {
+        this.searchSelectedIndex =
+          (this.searchSelectedIndex + 1) % matches.length;
+      }
+      this.updateSearchHighlights();
+      this.updateOverlay();
+      return;
+    }
+
+    if (e.key === 'Enter') {
+      interceptEvent(e);
+      const selected = matches[this.searchSelectedIndex];
+      if (selected) {
+        this.followLink(selected.element);
+      }
+      return;
+    }
+
+    // Ignore other keys in selecting mode
+    interceptEvent(e);
+  }
+
+  private updateSearchHighlights(): void {
+    const matches = searchLinks(this.links, this.searchQuery);
+    const matchedElements = new Set(matches.map((m) => m.element));
+    const selectedElement =
+      this.state === 'search-selecting' && matches[this.searchSelectedIndex]
+        ? matches[this.searchSelectedIndex].element
+        : null;
+    this.highlightManager?.applySearchHighlights(
+      this.links,
+      matchedElements,
+      selectedElement,
+    );
   }
 
   private handleSequentialKey(key: string): void {
@@ -225,8 +388,19 @@ export class KeyboardHandler {
     this.handleSequentialKey(key);
   }
 
+  private getOverlayMode(): OverlayMode {
+    if (this.state === 'searching' || this.state === 'search-selecting') {
+      return {
+        kind: 'search',
+        query: this.searchQuery,
+        selectedIndex: this.searchSelectedIndex,
+      };
+    }
+    return { kind: 'label', typed: this.typed };
+  }
+
   private updateOverlay(): void {
-    this.overlay?.render(this.links, this.typed);
+    this.overlay?.render(this.links, this.getOverlayMode());
   }
 
   private followLink(el: HTMLAnchorElement): void {

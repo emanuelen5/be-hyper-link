@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client';
-import type { LinkInfo } from '../shared/types';
+import type { LinkInfo, OverlayMode } from '../shared/types';
 
 interface LabelBadgeProps {
   label: string;
@@ -39,12 +39,146 @@ function LabelBadge({ label, rect, typed, isMatch }: LabelBadgeProps) {
   );
 }
 
-interface OverlayProps {
+function SearchBar({ query }: { query: string }) {
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: '10px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: '#1e1e1e',
+        color: '#fff',
+        fontSize: '16px',
+        fontFamily: 'monospace',
+        padding: '8px 16px',
+        borderRadius: '8px',
+        border: '2px solid #ffcc00',
+        zIndex: 2147483647,
+        pointerEvents: 'none',
+        userSelect: 'none',
+        minWidth: '200px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+      }}
+    >
+      <span style={{ color: '#888' }}>Search: </span>
+      <span>{query}</span>
+      <span
+        style={{
+          borderRight: '2px solid #ffcc00',
+          animation: 'none',
+          marginLeft: '1px',
+        }}
+      >
+        &nbsp;
+      </span>
+    </div>
+  );
+}
+
+interface SearchOverlayProps {
+  links: LinkInfo[];
+  query: string;
+  selectedIndex: number;
+}
+
+function SearchOverlayRoot({
+  links,
+  query,
+  selectedIndex,
+}: SearchOverlayProps) {
+  const q = query.toLowerCase();
+  const matches = q
+    ? links.filter((l) =>
+        (l.element.textContent ?? '').trim().toLowerCase().includes(q),
+      )
+    : links;
+
+  return (
+    <>
+      <SearchBar query={query} />
+      {matches.map((info, i) => {
+        const isSelected = selectedIndex >= 0 && i === selectedIndex;
+        return (
+          <SearchMatchBadge
+            key={info.label}
+            rect={info.rect}
+            text={(info.element.textContent ?? '').trim()}
+            query={query}
+            isSelected={isSelected}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+interface SearchMatchBadgeProps {
+  rect: DOMRect;
+  text: string;
+  query: string;
+  isSelected: boolean;
+}
+
+function SearchMatchBadge({
+  rect,
+  text,
+  query,
+  isSelected,
+}: SearchMatchBadgeProps) {
+  // Truncate long link text for the badge
+  const displayText = text.length > 40 ? text.slice(0, 37) + '...' : text;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        left: rect.left,
+        top: rect.top - 18,
+        background: isSelected ? '#4CAF50' : '#ffcc00',
+        color: '#000',
+        fontSize: '11px',
+        fontFamily: 'monospace',
+        fontWeight: isSelected ? 'bold' : 'normal',
+        padding: '1px 4px',
+        borderRadius: '3px',
+        zIndex: 2147483647,
+        pointerEvents: 'none',
+        userSelect: 'none',
+        lineHeight: '1.4',
+        maxWidth: '300px',
+        overflow: 'hidden',
+        whiteSpace: 'nowrap',
+        textOverflow: 'ellipsis',
+        boxShadow: isSelected ? '0 0 6px rgba(76, 175, 80, 0.6)' : 'none',
+      }}
+    >
+      {highlightMatch(displayText, query)}
+    </div>
+  );
+}
+
+function highlightMatch(text: string, query: string): (string | JSX.Element)[] {
+  if (!query) return [text];
+  const lower = text.toLowerCase();
+  const qLower = query.toLowerCase();
+  const idx = lower.indexOf(qLower);
+  if (idx === -1) return [text];
+  return [
+    text.slice(0, idx),
+    <span key="hl" style={{ background: '#ff6', fontWeight: 'bold' }}>
+      {text.slice(idx, idx + query.length)}
+    </span>,
+    text.slice(idx + query.length),
+  ];
+}
+
+interface LabelOverlayProps {
   links: LinkInfo[];
   typed: string;
 }
 
-function OverlayRoot({ links, typed }: OverlayProps) {
+function LabelOverlayRoot({ links, typed }: LabelOverlayProps) {
   return (
     <>
       {links.map((info) => {
@@ -61,6 +195,24 @@ function OverlayRoot({ links, typed }: OverlayProps) {
       })}
     </>
   );
+}
+
+interface OverlayRootProps {
+  links: LinkInfo[];
+  mode: OverlayMode;
+}
+
+function OverlayRoot({ links, mode }: OverlayRootProps) {
+  if (mode.kind === 'search') {
+    return (
+      <SearchOverlayRoot
+        links={links}
+        query={mode.query}
+        selectedIndex={mode.selectedIndex}
+      />
+    );
+  }
+  return <LabelOverlayRoot links={links} typed={mode.typed} />;
 }
 
 export class Overlay {
@@ -80,8 +232,8 @@ export class Overlay {
     this.reactRoot = ReactDOM.createRoot(container);
   }
 
-  render(links: LinkInfo[], typed: string): void {
-    this.reactRoot.render(<OverlayRoot links={links} typed={typed} />);
+  render(links: LinkInfo[], mode: OverlayMode): void {
+    this.reactRoot.render(<OverlayRoot links={links} mode={mode} />);
   }
 
   destroy(): void {
