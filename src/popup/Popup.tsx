@@ -111,6 +111,15 @@ export function Popup() {
       <button onClick={handleSave} style={buttonStyle}>
         {saved ? 'Saved!' : 'Save'}
       </button>
+
+      <a
+        href="../release-notes/release-notes.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={linkStyle}
+      >
+        Release Notes
+      </a>
     </div>
   );
 }
@@ -145,4 +154,12 @@ const buttonStyle: React.CSSProperties = {
   borderRadius: '4px',
   cursor: 'pointer',
   fontSize: '13px',
+};
+
+const linkStyle: React.CSSProperties = {
+  display: 'block',
+  marginTop: '12px',
+  fontSize: '12px',
+  color: '#0060df',
+  textAlign: 'center',
 };

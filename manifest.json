@@ -17,6 +17,7 @@
     "default_popup": "src/popup/popup.html",
     "default_title": "hyper-Link settings"
   },
+  "web_accessible_resources": ["src/release-notes/release-notes.html"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

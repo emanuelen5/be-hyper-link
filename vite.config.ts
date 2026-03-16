@@ -16,6 +16,7 @@ export default defineConfig({
         manifest.version = pkg.version;
         return manifest;
       },
+      additionalInputs: ['src/release-notes/release-notes.html'],
       // Additional static assets (icons) are in public/
     }),
   ],

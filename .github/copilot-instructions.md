@@ -47,6 +47,27 @@ Firefox browser extension for keyboard-based link navigation. TypeScript + React
 - Static assets (icons) live in `public/` and are copied to `dist/` unchanged
 - Always format code with `npm run format` (Prettier) after editing
 
+## Changes in purpose/functionality
+If the extension's purpose or functionality changes significantly (e.g. adding form navigation, changing the trigger key behavior, browser support, etc.), update this instructions file to reflect the new design and architecture.
+
+## Changelog
+Always add an entry to the `[Unreleased]` section in `CHANGELOG.md` when making any user-visible change. Follow the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format:
+
+- **Added** – new features
+- **Changed** – changes to existing functionality
+- **Deprecated** – features that will be removed in a future release
+- **Removed** – features removed in this release
+- **Fixed** – bug fixes
+- **Security** – fixes for vulnerabilities
+
+Each entry should reference the relevant pull request (but only if there is one), e.g.:
+```markdown
+## [Unreleased]
+
+### Fixed
+- Corrected label positioning on scrolled pages ([#42](https://github.com/emanuelen5/be-hyper-link/pull/42))
+```
+
 ## Future: Form Navigation
 The architecture supports form navigation (inputs, textareas, selects). When implementing:
 - Add a `targetType` setting: `'links' | 'inputs' | 'all'`
