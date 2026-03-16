@@ -1,6 +1,7 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 import webExtension, { readJsonFile } from 'vite-plugin-web-extension';
+import pkg from './package.json';
 
 const browser = process.env.BROWSER ?? 'firefox';
 const manifestFile =
@@ -10,7 +11,11 @@ export default defineConfig({
   plugins: [
     react(),
     webExtension({
-      manifest: () => readJsonFile(manifestFile),
+      manifest: () => {
+        const manifest = readJsonFile(manifestFile);
+        manifest.version = pkg.version;
+        return manifest;
+      },
       // Additional static assets (icons) are in public/
     }),
   ],
