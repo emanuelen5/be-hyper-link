@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import browser from 'webextension-polyfill';
 import type { NavigationMode, Settings } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
 

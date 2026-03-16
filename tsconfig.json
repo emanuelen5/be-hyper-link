@@ -10,7 +10,7 @@
     "outDir": "dist",
     "sourceMap": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "types": ["firefox-webext-browser"]
+    "types": ["webextension-polyfill"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests"]

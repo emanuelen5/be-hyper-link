@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import { KeyboardHandler } from './KeyboardHandler';
 import { DEFAULT_SETTINGS } from '../shared/types';
 import type { Settings } from '../shared/types';

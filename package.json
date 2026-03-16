@@ -5,8 +5,12 @@
   "license": "GPL-3.0-only",
   "private": true,
   "scripts": {
-    "build": "vite build && cd dist && zip -r ../hyper-link.zip .",
-    "build:dev": "vite build --mode development",
+    "build": "BROWSER=firefox vite build && cd dist-firefox && zip -r ../hyper-link-firefox.zip .",
+    "build:firefox": "npm run build",
+    "build:chrome": "BROWSER=chrome vite build && cd dist-chrome && zip -r ../hyper-link-chrome.zip .",
+    "build:dev": "BROWSER=firefox vite build --mode development",
+    "build:dev:firefox": "npm run build:dev",
+    "build:dev:chrome": "BROWSER=chrome vite build --mode development",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
@@ -21,6 +25,7 @@
     "@types/firefox-webext-browser": "^120.0.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
+    "@types/webextension-polyfill": "^0.12.5",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "@vitejs/plugin-react": "^6.0.1",
@@ -38,6 +43,7 @@
   },
   "dependencies": {
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "webextension-polyfill": "^0.12.0"
   }
 }
