@@ -172,7 +172,8 @@ export class KeyboardHandler {
       } else {
         this.handleSequentialKey(e.key);
       }
-    } else { // Non-handled key, just ignore and don't intercept
+    } else {
+      // Non-handled key, just ignore and don't intercept
       return;
     }
 
