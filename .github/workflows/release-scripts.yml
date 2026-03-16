@@ -1,0 +1,41 @@
+name: Release scripts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - CHANGELOG.md
+      - .github/scripts/*
+      - .github/workflows/release-scripts.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - CHANGELOG.md
+      - .github/scripts/*
+      - .github/workflows/release-scripts.yml
+
+jobs:
+  release-scripts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Validate tag format
+        run: .github/scripts/validate-tag.sh v0.0.1
+
+      - name: Check CHANGELOG has required markers
+        run: |
+          grep -q '## \[Unreleased\]' CHANGELOG.md
+          grep -q '<!-- releases -->' CHANGELOG.md
+          grep -q '<!-- released -->' CHANGELOG.md
+
+      - name: Dry-run update-changelog
+        run: |
+          cp CHANGELOG.md CHANGELOG.md.bak
+          .github/scripts/update-changelog.py v99.0.0
+          grep -q '\[99.0.0\]' CHANGELOG.md
+          grep -q '<!-- releases -->' CHANGELOG.md
+          grep -q '<!-- released -->' CHANGELOG.md
+          mv CHANGELOG.md.bak CHANGELOG.md
