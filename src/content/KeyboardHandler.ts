@@ -220,14 +220,14 @@ export class KeyboardHandler {
   }
 
   private handleSearchKeydown(e: KeyboardEvent): void {
+    interceptEvent(e);
+
     if (e.key === 'Escape') {
-      interceptEvent(e);
       this.deactivate();
       return;
     }
 
     if (e.key === 'Enter') {
-      interceptEvent(e);
       const matches = searchLinks(this.links, this.searchQuery);
       if (matches.length >= 1) {
         // Enter search-selecting mode to tab through matches
@@ -240,7 +240,6 @@ export class KeyboardHandler {
     }
 
     if (e.key === 'Backspace') {
-      interceptEvent(e);
       if (this.searchQuery.length === 0) {
         // Go back to active/label mode
         this.state = 'active';
@@ -256,42 +255,33 @@ export class KeyboardHandler {
 
     // Accept any printable character for search
     if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-      interceptEvent(e);
       this.searchQuery += e.key;
       const matches = searchLinks(this.links, this.searchQuery);
       if (matches.length === 1) {
         // Single match: highlight it green and wait for Enter
         this.state = 'search-selecting';
         this.searchSelectedIndex = 0;
-        this.updateSearchHighlights();
-        this.updateOverlay();
-        return;
       }
       this.updateSearchHighlights();
       this.updateOverlay();
-      return;
     }
-
-    // Ignore other keys
-    interceptEvent(e);
   }
 
   private handleSearchSelectingKeydown(e: KeyboardEvent): void {
+    interceptEvent(e);
+
     if (e.key === 'Escape') {
-      interceptEvent(e);
       this.deactivate();
       return;
     }
 
     const matches = searchLinks(this.links, this.searchQuery);
     if (matches.length === 0) {
-      interceptEvent(e);
       this.deactivate();
       return;
     }
 
     if (e.key === 'Backspace') {
-      interceptEvent(e);
       this.state = 'searching';
       this.searchSelectedIndex = -1;
       if (this.searchQuery.length > 0) {
@@ -303,7 +293,6 @@ export class KeyboardHandler {
     }
 
     if (e.key === 'Tab') {
-      interceptEvent(e);
       if (e.shiftKey) {
         this.searchSelectedIndex =
           (this.searchSelectedIndex - 1 + matches.length) % matches.length;
@@ -317,16 +306,12 @@ export class KeyboardHandler {
     }
 
     if (e.key === 'Enter') {
-      interceptEvent(e);
       const selected = matches[this.searchSelectedIndex];
       if (selected) {
         this.followLink(selected.element);
       }
       return;
     }
-
-    // Ignore other keys in selecting mode
-    interceptEvent(e);
   }
 
   private updateSearchHighlights(): void {
