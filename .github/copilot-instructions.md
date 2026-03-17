@@ -1,12 +1,13 @@
 # hyper-link Copilot Instructions
 
 ## Project Overview
-Firefox browser extension for keyboard-based link navigation. TypeScript + React, Manifest V2.
+Firefox and Chrome browser extension for keyboard-based link navigation. TypeScript + React. Firefox uses Manifest V2; Chrome uses Manifest V3.
 
 ## Architecture
 - `src/content/`: Content script injected into pages (link detection, overlay, keyboard handler)
 - `src/background/`: Background script (settings storage, message routing)
 - `src/popup/`: Extension popup UI (settings, React)
+- `src/release-notes/`: Release-notes page shown after an update (parses CHANGELOG.md, rendered as an HTML page)
 - `src/shared/`: Shared types and utilities used across extension contexts
 - `src/utils/`: Pure utility functions (label filtering, etc.)
 
@@ -21,7 +22,7 @@ Firefox browser extension for keyboard-based link navigation. TypeScript + React
 - **Fixed positioning** in label badges: no `scrollY` correction needed since `position: fixed` is already relative to the viewport
 - **Keyboard capture**: `document.addEventListener('keydown', ..., { capture: true })` ensures the extension sees keys before the page does
 - **React** for both the overlay (content script) and popup UI
-- **Manifest V2** for Firefox compatibility (MV3 has limited cross-browser support)
+- **Dual-manifest setup**: `manifest.json` (Firefox, MV2) and `manifest.chrome.json` (Chrome, MV3); selected at build time via the `BROWSER` environment variable
 - **Two navigation modes**: sequential (letter combos a, b, …, aa, ab, …) and keyboard-region (keyboard layout rows → vertical screen regions)
 - **Two highlight toggles**: dim (dim everything except link labels) and border (outline each link), independently enabled
 - **Trigger key** (default: `f`) activates the overlay only when not focused on an input/textarea
@@ -39,19 +40,25 @@ Firefox browser extension for keyboard-based link navigation. TypeScript + React
 - Add UI controls in `src/popup/Popup.tsx`
 
 ## Build
-- `npm run build` — production Vite build into `dist/`
-- `npm run build:dev` — development build with source maps
+- `npm run build:firefox` (alias: `npm run build`) — production Firefox build into `dist-firefox/`, zipped as `hyper-link-firefox.zip`
+- `npm run build:chrome` — production Chrome build into `dist-chrome/`, zipped as `hyper-link-chrome.zip`
+- `npm run build:dev:firefox` (alias: `npm run build:dev`) — development Firefox build with source maps
+- `npm run build:dev:chrome` — development Chrome build with source maps
 - Build is powered by `vite` + `vite-plugin-web-extension` + `@vitejs/plugin-react`
-- Entry points are auto-detected from `manifest.json` by `vite-plugin-web-extension`
-- `manifest.json` at the project root references source files (e.g. `src/content/index.tsx`); the plugin rewrites paths in the output manifest to point to the built files
-- Static assets (icons) live in `assets/` and are copied to `dist/` unchanged
+- The target browser is selected via the `BROWSER` environment variable (`firefox` by default)
+- `manifest.json` (Firefox, MV2) and `manifest.chrome.json` (Chrome, MV3) are selected at build time; `vite-plugin-web-extension` auto-detects entry points and rewrites manifest paths to built files
+- Static assets (icons) live in `assets/` and are copied to the output directory unchanged
 - Always format code with `npm run format` (Prettier) after editing
 
-## Changes in purpose/functionality
-If the extension's purpose or functionality changes significantly (e.g. adding form navigation, changing the trigger key behavior, browser support, etc.), update this instructions file to reflect the new design and architecture.
+## Keeping these instructions up to date
+If you notice that any part of these instructions is out of date or inaccurate, update this file as part of your change. This includes adding new source directories, updating build commands, correcting architecture descriptions, or any other details that no longer reflect the actual codebase.
+
+In particular, if the extension's purpose or functionality changes significantly (e.g. adding form navigation, changing the trigger key behavior, browser support, etc.), update this file to reflect the new design and architecture.
 
 ## Changelog
-Always add an entry to the `[Unreleased]` section in `CHANGELOG.md` when making any user-visible change. Follow the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format:
+Only add a changelog entry when the change is **user-visible** — meaning it affects the extension's GUI or observable behavior. Do **not** add entries for internal refactors, file renames, code formatting, test changes, or other implementation details that users never see.
+
+Always add an entry to the `[Unreleased]` section in `CHANGELOG.md` when making a user-visible change. Follow the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format:
 
 - **Added** – new features
 - **Changed** – changes to existing functionality
