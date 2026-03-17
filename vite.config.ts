@@ -17,9 +17,10 @@ export default defineConfig({
         return manifest;
       },
       additionalInputs: ['src/release-notes/release-notes.html'],
-      // Additional static assets (icons) are in public/
+      // Additional static assets (icons) are in assets/
     }),
   ],
+  publicDir: 'assets',
   build: {
     outDir: `dist-${browser}`,
     emptyOutDir: true,
