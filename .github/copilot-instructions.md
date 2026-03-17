@@ -50,8 +50,10 @@ Firefox and Chrome browser extension for keyboard-based link navigation. TypeScr
 - Static assets (icons) live in `assets/` and are copied to the output directory unchanged
 - Always format code with `npm run format` (Prettier) after editing
 
-## Changes in purpose/functionality
-If the extension's purpose or functionality changes significantly (e.g. adding form navigation, changing the trigger key behavior, browser support, etc.), update this instructions file to reflect the new design and architecture.
+## Keeping these instructions up to date
+If you notice that any part of these instructions is out of date or inaccurate, update this file as part of your change. This includes adding new source directories, updating build commands, correcting architecture descriptions, or any other details that no longer reflect the actual codebase.
+
+In particular, if the extension's purpose or functionality changes significantly (e.g. adding form navigation, changing the trigger key behavior, browser support, etc.), update this file to reflect the new design and architecture.
 
 ## Changelog
 Only add a changelog entry when the change is **user-visible** — meaning it affects the extension's GUI or observable behavior. Do **not** add entries for internal refactors, file renames, code formatting, test changes, or other implementation details that users never see.
