@@ -44,7 +44,7 @@ Firefox browser extension for keyboard-based link navigation. TypeScript + React
 - Build is powered by `vite` + `vite-plugin-web-extension` + `@vitejs/plugin-react`
 - Entry points are auto-detected from `manifest.json` by `vite-plugin-web-extension`
 - `manifest.json` at the project root references source files (e.g. `src/content/index.tsx`); the plugin rewrites paths in the output manifest to point to the built files
-- Static assets (icons) live in `public/` and are copied to `dist/` unchanged
+- Static assets (icons) live in `assets/` and are copied to `dist/` unchanged
 - Always format code with `npm run format` (Prettier) after editing
 
 ## Changes in purpose/functionality
