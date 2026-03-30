@@ -39,7 +39,7 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 export interface LinkInfo {
-  element: HTMLAnchorElement;
+  element: HTMLElement;
   label: string;
   rect: DOMRect;
 }

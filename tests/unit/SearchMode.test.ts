@@ -255,4 +255,80 @@ describe('Search Mode', () => {
     pressKey('Enter');
     expect(clickSpy).toHaveBeenCalled();
   });
+
+  it('matches link when query words are separated by spaces', () => {
+    // "Contact Info" should match query "contact info"
+    const contactLink = document.querySelector<HTMLAnchorElement>(
+      'a[href="https://example.com/contact"]',
+    )!;
+    const clickSpy = vi.spyOn(contactLink, 'click');
+
+    pressKey('f'); // activate
+    pressKey('/'); // search mode
+    for (const ch of 'contact info') {
+      pressKey(ch);
+    }
+    // Single match -> enters search-selecting
+    pressKey('Enter');
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it('matches link regardless of word order in query', () => {
+    // "info contact" (reversed) should still match "Contact Info"
+    const contactLink = document.querySelector<HTMLAnchorElement>(
+      'a[href="https://example.com/contact"]',
+    )!;
+    const clickSpy = vi.spyOn(contactLink, 'click');
+
+    pressKey('f'); // activate
+    pressKey('/'); // search mode
+    for (const ch of 'info contact') {
+      pressKey(ch);
+    }
+    pressKey('Enter');
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it('does not match when one space-separated word is absent', () => {
+    pressKey('f'); // activate
+    pressKey('/'); // search mode
+    // 'a' matches all three links (all contain the letter 'a'), but 'xyz' matches none
+    // so "a xyz" should produce zero matches
+    for (const ch of 'a xyz') {
+      pressKey(ch);
+    }
+    // 0 matches -> Enter should not follow any link
+    const homeLink = document.querySelector<HTMLAnchorElement>(
+      'a[href="https://example.com/home"]',
+    )!;
+    const aboutLink = document.querySelector<HTMLAnchorElement>(
+      'a[href="https://example.com/about"]',
+    )!;
+    const contactLink = document.querySelector<HTMLAnchorElement>(
+      'a[href="https://example.com/contact"]',
+    )!;
+    const homeClickSpy = vi.spyOn(homeLink, 'click');
+    const aboutClickSpy = vi.spyOn(aboutLink, 'click');
+    const contactClickSpy = vi.spyOn(contactLink, 'click');
+    pressKey('Enter');
+    expect(homeClickSpy).not.toHaveBeenCalled();
+    expect(aboutClickSpy).not.toHaveBeenCalled();
+    expect(contactClickSpy).not.toHaveBeenCalled();
+  });
+
+  it('treats multiple consecutive spaces like a single space', () => {
+    // "home  page" (double space) should match "Home Page"
+    const homeLink = document.querySelector<HTMLAnchorElement>(
+      'a[href="https://example.com/home"]',
+    )!;
+    const clickSpy = vi.spyOn(homeLink, 'click');
+
+    pressKey('f'); // activate
+    pressKey('/'); // search mode
+    for (const ch of 'home  page') {
+      pressKey(ch);
+    }
+    pressKey('Enter');
+    expect(clickSpy).toHaveBeenCalled();
+  });
 });
