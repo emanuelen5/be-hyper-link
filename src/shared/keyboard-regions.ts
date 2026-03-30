@@ -26,9 +26,9 @@ export function getRegionForKey(key: string): ScreenRegion | null {
 }
 
 export function getRegionLinks(
-  links: HTMLAnchorElement[],
+  links: HTMLElement[],
   region: ScreenRegion,
-): HTMLAnchorElement[] {
+): HTMLElement[] {
   const viewportHeight = window.innerHeight;
   const top = region.topFraction * viewportHeight;
   const bottom = region.bottomFraction * viewportHeight;

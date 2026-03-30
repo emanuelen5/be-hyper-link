@@ -2,10 +2,17 @@ import { getRegionForKey, getRegionLinks } from '../shared/keyboard-regions';
 import type { LinkInfo, OverlayMode, Settings } from '../shared/types';
 import { HighlightManager } from './HighlightManager';
 import { generateLabels, labelsMatch } from './LabelGenerator';
-import { getVisibleLinks } from './LinkDetector';
+import { getVisibleFormElements, getVisibleLinks } from './LinkDetector';
 import { Overlay } from './Overlay';
 
-type State = 'idle' | 'active' | 'typing' | 'searching' | 'search-selecting';
+type State =
+  | 'idle'
+  | 'active'
+  | 'typing'
+  | 'searching'
+  | 'search-selecting'
+  | 'form'
+  | 'form-focused';
 
 const INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT', 'CONTENTEDITABLE']);
 
@@ -22,7 +29,7 @@ function interceptEvent(e: KeyboardEvent) {
   e.stopPropagation();
 }
 
-function getLinkText(element: HTMLAnchorElement): string {
+function getLinkText(element: HTMLElement): string {
   return (element.textContent ?? '').trim().toLowerCase();
 }
 
@@ -47,10 +54,12 @@ export class KeyboardHandler {
   private overlay: Overlay | null = null;
   private highlightManager: HighlightManager | null = null;
   // For keyboard-region mode: first key selects region
-  private regionLinks: HTMLAnchorElement[] | null = null;
+  private regionLinks: HTMLElement[] | null = null;
   // For search mode
   private searchQuery = '';
   private searchSelectedIndex = -1;
+  // For form-focused mode: the currently focused form element
+  private focusedFormElement: HTMLElement | null = null;
 
   private boundKeydown: (e: KeyboardEvent) => void;
   private boundScroll: () => void;
@@ -151,6 +160,7 @@ export class KeyboardHandler {
     this.regionLinks = null;
     this.searchQuery = '';
     this.searchSelectedIndex = -1;
+    this.focusedFormElement = null;
     this.state = 'idle';
   }
 
@@ -160,6 +170,22 @@ export class KeyboardHandler {
     this.searchSelectedIndex = -1;
     this.updateSearchHighlights();
     this.updateOverlay();
+  }
+
+  private enterFormMode(): void {
+    const elements = getVisibleFormElements();
+    const labels = generateLabels(elements.length);
+
+    this.links = elements.map((el, i) => ({
+      element: el,
+      label: labels[i],
+      rect: el.getBoundingClientRect(),
+    }));
+
+    this.typed = '';
+    this.highlightManager?.apply(this.links);
+    this.overlay?.render(this.links, { kind: 'label', typed: '' });
+    this.state = 'form';
   }
 
   private handleKeydown(e: KeyboardEvent): void {
@@ -187,6 +213,16 @@ export class KeyboardHandler {
       return;
     }
 
+    if (this.state === 'form') {
+      this.handleFormKeydown(e);
+      return;
+    }
+
+    if (this.state === 'form-focused') {
+      this.handleFormFocusedKeydown(e);
+      return;
+    }
+
     // Active or typing state
 
     if (e.key === 'Escape') {
@@ -195,6 +231,10 @@ export class KeyboardHandler {
     } else if (e.key === this.settings.searchKey) {
       interceptEvent(e);
       this.enterSearchMode();
+      return;
+    } else if (e.key === 'B' && e.shiftKey) {
+      interceptEvent(e);
+      this.enterFormMode();
       return;
     } else if (e.key === 'Enter') {
       const matches = this.links.filter((l) =>
@@ -321,6 +361,86 @@ export class KeyboardHandler {
     }
   }
 
+  private handleFormKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Escape') {
+      this.deactivate();
+      return;
+    } else if (e.key === 'Backspace') {
+      interceptEvent(e);
+      if (this.typed.length === 0) {
+        this.deactivate();
+      } else {
+        this.typed = this.typed.slice(0, -1);
+        this.updateOverlay();
+      }
+      return;
+    } else if (e.key === 'Enter') {
+      interceptEvent(e);
+      const matches = this.links.filter((l) =>
+        labelsMatch(l.label, this.typed),
+      );
+      if (matches.length === 1) {
+        this.activateFormElement(matches[0].element);
+      }
+      return;
+    } else if (e.key.length === 1 && e.key >= 'a' && e.key <= 'z') {
+      interceptEvent(e);
+      this.handleFormKey(e.key);
+    }
+  }
+
+  private handleFormKey(key: string): void {
+    this.typed += key;
+    const matches = this.links.filter((l) => labelsMatch(l.label, this.typed));
+    if (matches.length === 0) {
+      this.deactivate();
+      return;
+    }
+    if (
+      matches.length === 1 &&
+      matches[0].label === this.typed &&
+      !this.settings.confirmBeforeFollow
+    ) {
+      this.activateFormElement(matches[0].element);
+      return;
+    }
+    this.updateOverlay();
+  }
+
+  private isClickableFormElement(el: HTMLElement): boolean {
+    if (el.tagName === 'BUTTON') return true;
+    if (el.getAttribute('role') === 'button') return true;
+    const inputType = ((el as HTMLInputElement).type ?? '').toLowerCase();
+    return ['submit', 'button', 'reset', 'checkbox', 'radio'].includes(
+      inputType,
+    );
+  }
+
+  private activateFormElement(el: HTMLElement): void {
+    if (this.isClickableFormElement(el)) {
+      this.deactivate();
+      el.click();
+    } else {
+      // Keep the extension active in form-focused state so Escape can blur
+      this.overlay?.destroy();
+      this.overlay = null;
+      this.highlightManager?.clear();
+      this.highlightManager = null;
+      this.focusedFormElement = el;
+      this.state = 'form-focused';
+      el.focus();
+    }
+  }
+
+  private handleFormFocusedKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Escape') {
+      interceptEvent(e);
+      this.focusedFormElement?.blur();
+      this.deactivate();
+    }
+    // All other keys pass through to the focused input
+  }
+
   private updateSearchHighlights(): void {
     const matches = searchLinks(this.links, this.searchQuery);
     const matchedElements = new Set(matches.map((m) => m.element));
@@ -395,7 +515,7 @@ export class KeyboardHandler {
     this.overlay?.render(this.links, this.getOverlayMode());
   }
 
-  private followLink(el: HTMLAnchorElement): void {
+  private followLink(el: HTMLElement): void {
     this.deactivate();
     el.click();
   }
