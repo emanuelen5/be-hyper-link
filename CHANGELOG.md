@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+- Trigger key now accepts modifier combinations (e.g. `ctrl+/`, `ctrl+shift+f`); click the field then press the desired key combo to set it
+
+### Changed
+- Settings are now saved immediately when any option is changed; the Save button has been removed
+
 <!-- releases -->
 
 <!-- released -->

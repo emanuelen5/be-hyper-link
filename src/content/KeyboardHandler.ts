@@ -9,6 +9,25 @@ type State = 'idle' | 'active' | 'typing' | 'searching' | 'search-selecting';
 
 const INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT', 'CONTENTEDITABLE']);
 
+function matchesTriggerKey(e: KeyboardEvent, triggerKey: string): boolean {
+  const MODIFIERS = ['ctrl', 'alt', 'shift', 'meta'] as const;
+  let remaining = triggerKey;
+  const modifiers: string[] = [];
+  for (const mod of MODIFIERS) {
+    if (remaining.toLowerCase().startsWith(mod + '+')) {
+      modifiers.push(mod);
+      remaining = remaining.slice(mod.length + 1);
+    }
+  }
+  return (
+    e.key === remaining &&
+    e.ctrlKey === modifiers.includes('ctrl') &&
+    e.altKey === modifiers.includes('alt') &&
+    e.shiftKey === modifiers.includes('shift') &&
+    e.metaKey === modifiers.includes('meta')
+  );
+}
+
 function isFocusedOnInput(): boolean {
   const el = document.activeElement;
   if (!el) return false;
@@ -158,10 +177,7 @@ export class KeyboardHandler {
   private handleKeydown(e: KeyboardEvent): void {
     if (this.state === 'idle') {
       if (
-        e.key === this.settings.triggerKey &&
-        !e.ctrlKey &&
-        !e.altKey &&
-        !e.metaKey &&
+        matchesTriggerKey(e, this.settings.triggerKey) &&
         !isFocusedOnInput()
       ) {
         e.preventDefault();

@@ -3,9 +3,11 @@ import browser from 'webextension-polyfill';
 import type { NavigationMode, Settings } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
 
+const MODIFIER_KEYS = ['Control', 'Shift', 'Alt', 'Meta'];
+
 export function Popup() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
-  const [saved, setSaved] = useState(false);
+  const [capturingKey, setCapturingKey] = useState(false);
 
   useEffect(() => {
     browser.storage.local.get('settings').then((result) => {
@@ -15,13 +17,34 @@ export function Popup() {
     });
   }, []);
 
-  function handleSave() {
-    browser.runtime
-      .sendMessage({ type: 'save-settings', settings })
-      .then(() => {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 1500);
-      });
+  function updateSettings(partial: Partial<Settings>) {
+    const newSettings = { ...settings, ...partial };
+    setSettings(newSettings);
+    browser.runtime.sendMessage({
+      type: 'save-settings',
+      settings: newSettings,
+    });
+  }
+
+  function handleTriggerKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!capturingKey) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (MODIFIER_KEYS.includes(e.key)) return;
+    if (e.key === 'Escape') {
+      setCapturingKey(false);
+      (e.target as HTMLInputElement).blur();
+      return;
+    }
+    const parts: string[] = [];
+    if (e.ctrlKey) parts.push('ctrl');
+    if (e.altKey) parts.push('alt');
+    if (e.shiftKey) parts.push('shift');
+    if (e.metaKey) parts.push('meta');
+    parts.push(e.key);
+    updateSettings({ triggerKey: parts.join('+') });
+    setCapturingKey(false);
+    (e.target as HTMLInputElement).blur();
   }
 
   return (
@@ -33,10 +56,7 @@ export function Popup() {
         <select
           value={settings.navigationMode}
           onChange={(e) =>
-            setSettings((s) => ({
-              ...s,
-              navigationMode: e.target.value as NavigationMode,
-            }))
+            updateSettings({ navigationMode: e.target.value as NavigationMode })
           }
           style={selectStyle}
         >
@@ -49,9 +69,7 @@ export function Popup() {
         <input
           type="checkbox"
           checked={settings.dimEnabled}
-          onChange={(e) =>
-            setSettings((s) => ({ ...s, dimEnabled: e.target.checked }))
-          }
+          onChange={(e) => updateSettings({ dimEnabled: e.target.checked })}
         />
         Dim page
       </label>
@@ -60,9 +78,7 @@ export function Popup() {
         <input
           type="checkbox"
           checked={settings.borderEnabled}
-          onChange={(e) =>
-            setSettings((s) => ({ ...s, borderEnabled: e.target.checked }))
-          }
+          onChange={(e) => updateSettings({ borderEnabled: e.target.checked })}
         />
         Border links
       </label>
@@ -72,10 +88,7 @@ export function Popup() {
           type="checkbox"
           checked={settings.refreshLinksOnScroll}
           onChange={(e) =>
-            setSettings((s) => ({
-              ...s,
-              refreshLinksOnScroll: e.target.checked,
-            }))
+            updateSettings({ refreshLinksOnScroll: e.target.checked })
           }
         />
         Continuously search for links on scroll
@@ -86,10 +99,7 @@ export function Popup() {
           type="checkbox"
           checked={settings.confirmBeforeFollow}
           onChange={(e) =>
-            setSettings((s) => ({
-              ...s,
-              confirmBeforeFollow: e.target.checked,
-            }))
+            updateSettings({ confirmBeforeFollow: e.target.checked })
           }
         />
         Confirm before following link
@@ -99,18 +109,20 @@ export function Popup() {
         Trigger Key
         <input
           type="text"
-          maxLength={1}
-          value={settings.triggerKey}
-          onChange={(e) =>
-            setSettings((s) => ({ ...s, triggerKey: e.target.value }))
-          }
-          style={{ ...selectStyle, width: '3em' }}
+          readOnly
+          value={capturingKey ? '' : settings.triggerKey}
+          placeholder={capturingKey ? 'Press a key…' : ''}
+          onFocus={() => setCapturingKey(true)}
+          onBlur={() => setCapturingKey(false)}
+          onKeyDown={handleTriggerKeyDown}
+          style={{
+            ...selectStyle,
+            width: '8em',
+            cursor: 'pointer',
+            backgroundColor: capturingKey ? '#fff8e1' : undefined,
+          }}
         />
       </label>
-
-      <button onClick={handleSave} style={buttonStyle}>
-        {saved ? 'Saved!' : 'Save'}
-      </button>
 
       <a
         href="../release-notes/release-notes.html"
@@ -143,17 +155,6 @@ const checkboxLabelStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: '6px',
   marginBottom: '10px',
-};
-
-const buttonStyle: React.CSSProperties = {
-  marginTop: '8px',
-  padding: '6px 16px',
-  background: '#0060df',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '4px',
-  cursor: 'pointer',
-  fontSize: '13px',
 };
 
 const linkStyle: React.CSSProperties = {
