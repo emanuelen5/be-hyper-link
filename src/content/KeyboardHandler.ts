@@ -28,8 +28,15 @@ function getLinkText(element: HTMLAnchorElement): string {
 
 function searchLinks(links: LinkInfo[], query: string): LinkInfo[] {
   if (!query) return links;
-  const q = query.toLowerCase();
-  return links.filter((l) => getLinkText(l.element).includes(q));
+  const words = query
+    .toLowerCase()
+    .split(' ')
+    .filter((w) => w.length > 0);
+  if (words.length === 0) return links;
+  return links.filter((l) => {
+    const text = getLinkText(l.element);
+    return words.every((w) => text.includes(w));
+  });
 }
 
 export class KeyboardHandler {
