@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test';
 import path from 'path';
 
-const fixturePath = path.resolve(
-  __dirname,
-  'fixtures/test-page.html',
-);
+const fixturePath = path.resolve(__dirname, 'fixtures/test-page.html');
 const fixtureUrl = `file://${fixturePath}`;
 
 test.describe('hyper-link navigation', () => {

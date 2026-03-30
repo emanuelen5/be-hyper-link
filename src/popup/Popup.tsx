@@ -107,6 +107,15 @@ export function Popup() {
         Confirm before following link
       </label>
 
+      <label style={checkboxLabelStyle}>
+        <input
+          type="checkbox"
+          checked={settings.uniqueLabels}
+          onChange={(e) => updateSettings({ uniqueLabels: e.target.checked })}
+        />
+        Unique labels (assign different labels to duplicate links)
+      </label>
+
       <label style={labelStyle}>
         Trigger Key
         <input

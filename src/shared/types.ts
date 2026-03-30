@@ -24,6 +24,7 @@ export interface Settings {
   borderEnabled: boolean;
   refreshLinksOnScroll: boolean;
   confirmBeforeFollow: boolean;
+  uniqueLabels: boolean;
   trigger: TriggerKey;
   searchKey: string;
 }
@@ -34,6 +35,7 @@ export const DEFAULT_SETTINGS: Settings = {
   borderEnabled: true,
   refreshLinksOnScroll: false,
   confirmBeforeFollow: false,
+  uniqueLabels: true,
   trigger: { key: '/', ctrl: false, alt: false, shift: false, meta: false },
   searchKey: '/',
 };

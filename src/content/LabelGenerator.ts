@@ -22,3 +22,33 @@ function toLabel(n: number, chars: string): string {
   if (n < len) return chars[n];
   return toLabel(Math.floor(n / len) - 1, chars) + chars[n % len];
 }
+
+/**
+ * Assigns labels to anchor elements. When uniqueLabels is false, elements that
+ * share the same href receive the same label; otherwise every element gets a
+ * distinct label.
+ */
+export function assignLabels(
+  elements: HTMLAnchorElement[],
+  uniqueLabels: boolean,
+): string[] {
+  if (uniqueLabels) {
+    return generateLabels(elements.length);
+  }
+
+  // Non-unique mode: collect distinct hrefs in first-seen order
+  const hrefToLabel = new Map<string, string>();
+  for (const el of elements) {
+    if (!hrefToLabel.has(el.href)) {
+      hrefToLabel.set(el.href, '');
+    }
+  }
+  // Assign sequential labels to each distinct href
+  const distinctLabels = generateLabels(hrefToLabel.size);
+  let i = 0;
+  for (const href of hrefToLabel.keys()) {
+    hrefToLabel.set(href, distinctLabels[i++]);
+  }
+
+  return elements.map((el) => hrefToLabel.get(el.href)!);
+}

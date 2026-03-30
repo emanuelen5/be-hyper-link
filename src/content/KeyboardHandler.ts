@@ -6,7 +6,7 @@ import type {
   TriggerKey,
 } from '../shared/types';
 import { HighlightManager } from './HighlightManager';
-import { generateLabels, labelsMatch } from './LabelGenerator';
+import { assignLabels, generateLabels, labelsMatch } from './LabelGenerator';
 import { getVisibleFormElements, getVisibleLinks } from './LinkDetector';
 import { Overlay } from './Overlay';
 
@@ -121,15 +121,43 @@ export class KeyboardHandler {
     this.refreshRects();
 
     if (newAnchors.length > 0) {
-      const newLabels = generateLabels(
-        this.links.length + newAnchors.length,
-      ).slice(this.links.length);
+      let newLinks: LinkInfo[];
 
-      const newLinks: LinkInfo[] = newAnchors.map((el, i) => ({
-        element: el,
-        label: newLabels[i],
-        rect: el.getBoundingClientRect(),
-      }));
+      if (!this.settings.uniqueLabels) {
+        // Non-unique: reuse the label for any href already seen, assign a new
+        // one (continuing the sequence) for hrefs that are brand-new.
+        const hrefToLabel = new Map<string, string>(
+          this.links.map((l) => [
+            (l.element as HTMLAnchorElement).href,
+            l.label,
+          ]),
+        );
+        const distinctLabelCount = new Set(this.links.map((l) => l.label)).size;
+        let nextLabelIndex = distinctLabelCount;
+
+        newLinks = newAnchors.map((el) => {
+          const href = (el as HTMLAnchorElement).href;
+          let label: string;
+          if (hrefToLabel.has(href)) {
+            label = hrefToLabel.get(href)!;
+          } else {
+            label = generateLabels(nextLabelIndex + 1)[nextLabelIndex];
+            hrefToLabel.set(href, label);
+            nextLabelIndex++;
+          }
+          return { element: el, label, rect: el.getBoundingClientRect() };
+        });
+      } else {
+        const newLabels = generateLabels(
+          this.links.length + newAnchors.length,
+        ).slice(this.links.length);
+
+        newLinks = newAnchors.map((el, i) => ({
+          element: el,
+          label: newLabels[i],
+          rect: el.getBoundingClientRect(),
+        }));
+      }
 
       this.links.push(...newLinks);
       this.highlightManager?.apply(this.links);
@@ -138,7 +166,7 @@ export class KeyboardHandler {
 
   private activate(): void {
     const anchors = getVisibleLinks();
-    const labels = generateLabels(anchors.length);
+    const labels = assignLabels(anchors, this.settings.uniqueLabels);
 
     this.links = anchors.map((el, i) => ({
       element: el,
@@ -249,7 +277,12 @@ export class KeyboardHandler {
       const matches = this.links.filter((l) =>
         labelsMatch(l.label, this.typed),
       );
-      if (matches.length === 1) {
+      const exactMatches = matches.filter((l) => l.label === this.typed);
+      if (exactMatches.length > 0) {
+        // Follow the first exact match. When uniqueLabels is false, multiple
+        // links may share the same label (same href); the first one is chosen.
+        this.followLink(exactMatches[0].element);
+      } else if (matches.length === 1) {
         this.followLink(matches[0].element);
       }
       return;
@@ -473,8 +506,10 @@ export class KeyboardHandler {
       return;
     }
     if (
-      matches.length === 1 &&
-      matches[0].label === this.typed &&
+      // All remaining matches have exactly this label (no longer prefix-only
+      // matches), so the user has fully typed a label.  In non-unique mode
+      // there may be more than one match here; we follow the first.
+      matches.every((m) => m.label === this.typed) &&
       !this.settings.confirmBeforeFollow
     ) {
       this.followLink(matches[0].element);
