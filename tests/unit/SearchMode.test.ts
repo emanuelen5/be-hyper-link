@@ -45,7 +45,7 @@ function pressKey(
 
 const settings: Settings = {
   ...DEFAULT_SETTINGS,
-  triggerKey: 'f',
+  trigger: { key: 'f', ctrl: false, alt: false, shift: false, meta: false },
   searchKey: '/',
 };
 

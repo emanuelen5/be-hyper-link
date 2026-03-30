@@ -1,5 +1,10 @@
 import { getRegionForKey, getRegionLinks } from '../shared/keyboard-regions';
-import type { LinkInfo, OverlayMode, Settings } from '../shared/types';
+import type {
+  LinkInfo,
+  OverlayMode,
+  Settings,
+  TriggerKey,
+} from '../shared/types';
 import { HighlightManager } from './HighlightManager';
 import { generateLabels, labelsMatch } from './LabelGenerator';
 import { getVisibleLinks } from './LinkDetector';
@@ -9,22 +14,13 @@ type State = 'idle' | 'active' | 'typing' | 'searching' | 'search-selecting';
 
 const INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT', 'CONTENTEDITABLE']);
 
-function matchesTriggerKey(e: KeyboardEvent, triggerKey: string): boolean {
-  const MODIFIERS = ['ctrl', 'alt', 'shift', 'meta'] as const;
-  let remaining = triggerKey;
-  const modifiers: string[] = [];
-  for (const mod of MODIFIERS) {
-    if (remaining.toLowerCase().startsWith(mod + '+')) {
-      modifiers.push(mod);
-      remaining = remaining.slice(mod.length + 1);
-    }
-  }
+function matchesTriggerKey(e: KeyboardEvent, trigger: TriggerKey): boolean {
   return (
-    e.key === remaining &&
-    e.ctrlKey === modifiers.includes('ctrl') &&
-    e.altKey === modifiers.includes('alt') &&
-    e.shiftKey === modifiers.includes('shift') &&
-    e.metaKey === modifiers.includes('meta')
+    e.key === trigger.key &&
+    e.ctrlKey === trigger.ctrl &&
+    e.altKey === trigger.alt &&
+    e.shiftKey === trigger.shift &&
+    e.metaKey === trigger.meta
   );
 }
 
@@ -176,10 +172,7 @@ export class KeyboardHandler {
 
   private handleKeydown(e: KeyboardEvent): void {
     if (this.state === 'idle') {
-      if (
-        matchesTriggerKey(e, this.settings.triggerKey) &&
-        !isFocusedOnInput()
-      ) {
+      if (matchesTriggerKey(e, this.settings.trigger) && !isFocusedOnInput()) {
         e.preventDefault();
         this.activate();
       }

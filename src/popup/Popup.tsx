@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 import type { NavigationMode, Settings } from '../shared/types';
-import { DEFAULT_SETTINGS } from '../shared/types';
+import { DEFAULT_SETTINGS, formatTriggerKey } from '../shared/types';
 
 const MODIFIER_KEYS = ['Control', 'Shift', 'Alt', 'Meta'];
 
@@ -42,7 +42,15 @@ export function Popup() {
     if (e.shiftKey) parts.push('shift');
     if (e.metaKey) parts.push('meta');
     parts.push(e.key);
-    updateSettings({ triggerKey: parts.join('+') });
+    updateSettings({
+      trigger: {
+        key: e.key,
+        ctrl: e.ctrlKey,
+        alt: e.altKey,
+        shift: e.shiftKey,
+        meta: e.metaKey,
+      },
+    });
     setCapturingKey(false);
     (e.target as HTMLInputElement).blur();
   }
@@ -110,7 +118,7 @@ export function Popup() {
         <input
           type="text"
           readOnly
-          value={capturingKey ? '' : settings.triggerKey}
+          value={capturingKey ? '' : formatTriggerKey(settings.trigger)}
           placeholder={capturingKey ? 'Press a key…' : ''}
           onFocus={() => setCapturingKey(true)}
           onBlur={() => setCapturingKey(false)}
