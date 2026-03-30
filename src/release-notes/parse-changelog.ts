@@ -29,17 +29,20 @@ export function parseChangelog(content: string): ChangelogSections {
   // Preamble: everything between the title line and ## [Unreleased].
   const unreleasedHeading = '## [Unreleased]';
   const headingIdx = content.indexOf(unreleasedHeading);
-  const preamble = headingIdx > 0
-    ? content.slice(content.indexOf('\n') + 1, headingIdx).trim()
-    : '';
+  const preamble =
+    headingIdx > 0
+      ? content.slice(content.indexOf('\n') + 1, headingIdx).trim()
+      : '';
 
-  const unreleased = releasesIdx >= 0 && releasedIdx > releasesIdx
-    ? content.slice(releasesIdx + RELEASES_MARKER.length, releasedIdx).trim()
-    : '';
+  const unreleased =
+    releasesIdx >= 0 && releasedIdx > releasesIdx
+      ? content.slice(releasesIdx + RELEASES_MARKER.length, releasedIdx).trim()
+      : '';
 
-  const released = releasedIdx >= 0
-    ? content.slice(releasedIdx + RELEASED_MARKER.length).trim()
-    : content;
+  const released =
+    releasedIdx >= 0
+      ? content.slice(releasedIdx + RELEASED_MARKER.length).trim()
+      : content;
 
   return { preamble, unreleased, released };
 }
