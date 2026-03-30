@@ -1,5 +1,10 @@
 import { getRegionForKey, getRegionLinks } from '../shared/keyboard-regions';
-import type { LinkInfo, OverlayMode, Settings } from '../shared/types';
+import type {
+  LinkInfo,
+  OverlayMode,
+  Settings,
+  TriggerKey,
+} from '../shared/types';
 import { HighlightManager } from './HighlightManager';
 import { generateLabels, labelsMatch } from './LabelGenerator';
 import { getVisibleFormElements, getVisibleLinks } from './LinkDetector';
@@ -15,6 +20,16 @@ type State =
   | 'form-focused';
 
 const INPUT_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT', 'CONTENTEDITABLE']);
+
+function matchesTriggerKey(e: KeyboardEvent, trigger: TriggerKey): boolean {
+  return (
+    e.key === trigger.key &&
+    e.ctrlKey === trigger.ctrl &&
+    e.altKey === trigger.alt &&
+    e.shiftKey === trigger.shift &&
+    e.metaKey === trigger.meta
+  );
+}
 
 function isFocusedOnInput(): boolean {
   const el = document.activeElement;
@@ -190,13 +205,7 @@ export class KeyboardHandler {
 
   private handleKeydown(e: KeyboardEvent): void {
     if (this.state === 'idle') {
-      if (
-        e.key === this.settings.triggerKey &&
-        !e.ctrlKey &&
-        !e.altKey &&
-        !e.metaKey &&
-        !isFocusedOnInput()
-      ) {
+      if (matchesTriggerKey(e, this.settings.trigger) && !isFocusedOnInput()) {
         e.preventDefault();
         this.activate();
       }
