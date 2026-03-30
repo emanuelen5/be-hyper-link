@@ -36,12 +36,6 @@ export function Popup() {
       (e.target as HTMLInputElement).blur();
       return;
     }
-    const parts: string[] = [];
-    if (e.ctrlKey) parts.push('ctrl');
-    if (e.altKey) parts.push('alt');
-    if (e.shiftKey) parts.push('shift');
-    if (e.metaKey) parts.push('meta');
-    parts.push(e.key);
     updateSettings({
       trigger: {
         key: e.key,

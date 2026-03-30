@@ -10,10 +10,10 @@ export interface TriggerKey {
 
 export function formatTriggerKey(trigger: TriggerKey): string {
   const parts: string[] = [];
-  if (trigger.ctrl) parts.push('ctrl');
-  if (trigger.alt) parts.push('alt');
-  if (trigger.shift) parts.push('shift');
-  if (trigger.meta) parts.push('meta');
+  if (trigger.ctrl) parts.push('Ctrl');
+  if (trigger.alt) parts.push('Alt');
+  if (trigger.shift) parts.push('Shift');
+  if (trigger.meta) parts.push('Meta');
   parts.push(trigger.key);
   return parts.join('+');
 }
