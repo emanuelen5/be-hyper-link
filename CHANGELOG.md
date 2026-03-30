@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+- Form navigation submode: press `Shift+B` while the overlay is active to label and navigate buttons, inputs, textareas, and select elements. Selecting a text input or textarea focuses it for editing; pressing `Escape` while the field is focused blurs it and deactivates the overlay.
 <!-- releases -->
 
 <!-- released -->

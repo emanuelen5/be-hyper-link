@@ -13,7 +13,7 @@ export class HighlightManager {
   private dimEnabled: boolean;
   private borderEnabled: boolean;
   private tintEl: HTMLElement | null = null;
-  private borderedLinks: HTMLAnchorElement[] = [];
+  private borderedLinks: HTMLElement[] = [];
 
   constructor(dimEnabled: boolean, borderEnabled: boolean) {
     this.dimEnabled = dimEnabled;
@@ -36,8 +36,8 @@ export class HighlightManager {
    */
   applySearchHighlights(
     allLinks: LinkInfo[],
-    matchedElements: Set<HTMLAnchorElement>,
-    selectedElement: HTMLAnchorElement | null,
+    matchedElements: Set<HTMLElement>,
+    selectedElement: HTMLElement | null,
   ): void {
     this.clearSearchHighlights();
 
