@@ -87,12 +87,17 @@ function SearchOverlayRoot({
   query,
   selectedIndex,
 }: SearchOverlayProps) {
-  const q = query.toLowerCase();
-  const matches = q
-    ? links.filter((l) =>
-        (l.element.textContent ?? '').trim().toLowerCase().includes(q),
-      )
-    : links;
+  const words = query
+    .toLowerCase()
+    .split(' ')
+    .filter((w) => w.length > 0);
+  const matches =
+    words.length > 0
+      ? links.filter((l) => {
+          const text = (l.element.textContent ?? '').trim().toLowerCase();
+          return words.every((w) => text.includes(w));
+        })
+      : links;
 
   return (
     <>
@@ -160,17 +165,59 @@ function SearchMatchBadge({
 
 function highlightMatch(text: string, query: string): (string | JSX.Element)[] {
   if (!query) return [text];
+  const words = query
+    .toLowerCase()
+    .split(' ')
+    .filter((w) => w.length > 0);
+  if (words.length === 0) return [text];
+
   const lower = text.toLowerCase();
-  const qLower = query.toLowerCase();
-  const idx = lower.indexOf(qLower);
-  if (idx === -1) return [text];
-  return [
-    text.slice(0, idx),
-    <span key="hl" style={{ background: '#ff6', fontWeight: 'bold' }}>
-      {text.slice(idx, idx + query.length)}
-    </span>,
-    text.slice(idx + query.length),
-  ];
+
+  // Collect all [start, end) ranges for each word occurrence
+  const ranges: [number, number][] = [];
+  for (const word of words) {
+    let idx = 0;
+    while (idx < lower.length) {
+      const pos = lower.indexOf(word, idx);
+      if (pos === -1) break;
+      ranges.push([pos, pos + word.length]);
+      idx = pos + word.length;
+    }
+  }
+
+  if (ranges.length === 0) return [text];
+
+  // Sort and merge overlapping ranges
+  ranges.sort((a, b) => a[0] - b[0]);
+  const merged: [number, number][] = [];
+  for (const [start, end] of ranges) {
+    if (merged.length > 0 && start <= merged[merged.length - 1][1]) {
+      merged[merged.length - 1][1] = Math.max(
+        merged[merged.length - 1][1],
+        end,
+      );
+    } else {
+      merged.push([start, end]);
+    }
+  }
+
+  // Build the result array
+  const result: (string | JSX.Element)[] = [];
+  let pos = 0;
+  for (const [start, end] of merged) {
+    if (pos < start) result.push(text.slice(pos, start));
+    result.push(
+      <span
+        key={`${start}-${end}`}
+        style={{ background: '#ff6', fontWeight: 'bold' }}
+      >
+        {text.slice(start, end)}
+      </span>,
+    );
+    pos = end;
+  }
+  if (pos < text.length) result.push(text.slice(pos));
+  return result;
 }
 
 interface LabelOverlayProps {

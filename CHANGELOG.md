@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Form navigation submode: press `Shift+B` while the overlay is active to label and navigate buttons, inputs, textareas, and select elements. Selecting a text input or textarea focuses it for editing; pressing `Escape` while the field is focused blurs it and deactivates the overlay.
+
+### Changed
+- Search box now uses fuzzy matching: words separated by spaces are matched independently (in any order) against link text
 <!-- releases -->
 
 <!-- released -->
