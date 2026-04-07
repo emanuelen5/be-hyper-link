@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 import type { NavigationMode, Settings } from '../shared/types';
 import { DEFAULT_SETTINGS, formatTriggerKey } from '../shared/types';
+import { Toast } from './Toast';
 
 const MODIFIER_KEYS = ['Control', 'Shift', 'Alt', 'Meta'];
 
 export function Popup() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [capturingKey, setCapturingKey] = useState(false);
+  const [toastTrigger, setToastTrigger] = useState(0);
 
   useEffect(() => {
     browser.storage.local.get('settings').then((result) => {
@@ -24,6 +26,7 @@ export function Popup() {
       type: 'save-settings',
       settings: newSettings,
     });
+    setToastTrigger((n) => n + 1);
   }
 
   function handleTriggerKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -134,6 +137,8 @@ export function Popup() {
       >
         Release Notes
       </a>
+
+      <Toast message="Settings saved" trigger={toastTrigger} />
     </div>
   );
 }
