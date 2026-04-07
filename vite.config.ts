@@ -7,7 +7,7 @@ const browser = process.env.BROWSER ?? 'firefox';
 const manifestFile =
   browser === 'chrome' ? 'manifest.chrome.json' : 'manifest.json';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     webExtension({
@@ -24,5 +24,6 @@ export default defineConfig({
   build: {
     outDir: `dist-${browser}`,
     emptyOutDir: true,
+    sourcemap: mode === 'development' ? 'inline' : false,
   },
-});
+}));
