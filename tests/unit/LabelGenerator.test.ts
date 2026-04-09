@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { generateLabels, labelsMatch } from '../../src/content/LabelGenerator';
+import {
+  assignLabels,
+  generateLabels,
+  labelsMatch,
+} from '../../src/content/LabelGenerator';
 import { filterLabels } from '../../src/utils/label-utils';
 
 describe('generateLabels', () => {
@@ -79,5 +83,72 @@ describe('filterLabels', () => {
     const result = filterLabels(items, 'ba');
     expect(result).toHaveLength(1);
     expect(result[0].label).toBe('ba');
+  });
+});
+
+function makeAnchors(hrefs: string[]): HTMLAnchorElement[] {
+  return hrefs.map((href) => {
+    const a = document.createElement('a') as HTMLAnchorElement;
+    // jsdom resolves relative URLs, so use absolute hrefs to keep tests simple
+    Object.defineProperty(a, 'href', { value: href, writable: false });
+    return a;
+  });
+}
+
+describe('assignLabels', () => {
+  it('unique mode: assigns sequential labels like generateLabels', () => {
+    const anchors = makeAnchors([
+      'https://a.com',
+      'https://b.com',
+      'https://c.com',
+    ]);
+    const labels = assignLabels(anchors, true);
+    expect(labels).toEqual(['a', 'b', 'c']);
+  });
+
+  it('unique mode: all labels are distinct', () => {
+    const anchors = makeAnchors([
+      'https://a.com',
+      'https://b.com',
+      'https://a.com',
+    ]);
+    const labels = assignLabels(anchors, true);
+    expect(labels).toEqual(['a', 'b', 'c']);
+  });
+
+  it('non-unique mode: same href gets the same label', () => {
+    const anchors = makeAnchors([
+      'https://a.com',
+      'https://b.com',
+      'https://a.com',
+    ]);
+    const labels = assignLabels(anchors, false);
+    expect(labels[0]).toBe(labels[2]);
+    expect(labels[0]).not.toBe(labels[1]);
+  });
+
+  it('non-unique mode: labels are assigned in first-seen href order', () => {
+    const anchors = makeAnchors([
+      'https://x.com',
+      'https://y.com',
+      'https://x.com',
+      'https://z.com',
+    ]);
+    const labels = assignLabels(anchors, false);
+    expect(labels).toEqual(['a', 'b', 'a', 'c']);
+  });
+
+  it('non-unique mode: all distinct hrefs still get distinct labels', () => {
+    const anchors = makeAnchors([
+      'https://a.com',
+      'https://b.com',
+      'https://c.com',
+    ]);
+    const labels = assignLabels(anchors, false);
+    expect(new Set(labels).size).toBe(3);
+  });
+
+  it('non-unique mode: empty input returns empty array', () => {
+    expect(assignLabels([], false)).toEqual([]);
   });
 });

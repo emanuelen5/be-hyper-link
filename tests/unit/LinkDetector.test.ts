@@ -43,8 +43,14 @@ describe('getVisibleLinks', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     vi.restoreAllMocks();
-    Object.defineProperty(window, 'innerHeight', { value: 768, configurable: true });
-    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true });
+    Object.defineProperty(window, 'innerHeight', {
+      value: 768,
+      configurable: true,
+    });
+    Object.defineProperty(window, 'innerWidth', {
+      value: 1024,
+      configurable: true,
+    });
   });
 
   it('returns visible links in the viewport', () => {
