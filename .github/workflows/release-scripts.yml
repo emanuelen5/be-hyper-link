@@ -31,11 +31,29 @@ jobs:
           grep -q '<!-- releases -->' CHANGELOG.md
           grep -q '<!-- released -->' CHANGELOG.md
 
+      - name: Check extract-release-notes succeeds
+        run: .github/scripts/extract-release-notes.sh
+
       - name: Dry-run update-changelog
         run: |
           cp CHANGELOG.md CHANGELOG.md.bak
+          .github/scripts/extract-release-notes.sh > /tmp/unreleased-before.txt
           .github/scripts/update-changelog.py v99.0.0
           grep -q '\[99.0.0\]' CHANGELOG.md
           grep -q '<!-- releases -->' CHANGELOG.md
           grep -q '<!-- released -->' CHANGELOG.md
+          # Verify the unreleased content was promoted under the new version
+          python3 -c "
+          import sys
+          before = open('/tmp/unreleased-before.txt').read().strip()
+          after = open('CHANGELOG.md').read()
+          for line in before.splitlines():
+              if line.strip() and line not in after:
+                  print(f'Line not found in updated CHANGELOG: {line!r}', file=sys.stderr)
+                  sys.exit(1)
+          print('All unreleased content found under new version')
+          "
+          # Verify the unreleased section between markers is now empty
+          BETWEEN=$(awk '/^<!-- releases -->/{found=1; next} found && /^<!-- released -->/{exit} found{print}' CHANGELOG.md)
+          [[ -z "$(echo "$BETWEEN" | tr -d '[:space:]')" ]] || (echo "Unreleased section not empty after update" && exit 1)
           mv CHANGELOG.md.bak CHANGELOG.md
