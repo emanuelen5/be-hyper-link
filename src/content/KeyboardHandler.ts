@@ -203,6 +203,22 @@ export class KeyboardHandler {
     this.state = 'form';
   }
 
+  private enterLinkMode(): void {
+    const anchors = getVisibleLinks();
+    const labels = generateLabels(anchors.length);
+
+    this.links = anchors.map((el, i) => ({
+      element: el,
+      label: labels[i],
+      rect: el.getBoundingClientRect(),
+    }));
+
+    this.typed = '';
+    this.highlightManager?.apply(this.links);
+    this.overlay?.render(this.links, { kind: 'label', typed: '' });
+    this.state = 'active';
+  }
+
   private handleKeydown(e: KeyboardEvent): void {
     if (this.state === 'idle') {
       if (matchesTriggerKey(e, this.settings.trigger) && !isFocusedOnInput()) {
@@ -373,6 +389,10 @@ export class KeyboardHandler {
   private handleFormKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
       this.deactivate();
+      return;
+    } else if (e.key === 'L' && e.shiftKey) {
+      interceptEvent(e);
+      this.enterLinkMode();
       return;
     } else if (e.key === 'Backspace') {
       interceptEvent(e);

@@ -242,4 +242,22 @@ describe('Form Mode', () => {
     const event = pressKey('g');
     expect(event.defaultPrevented).toBe(false);
   });
+
+  it('switches back to link mode on Shift+L in form mode', () => {
+    createButton('Submit', 100);
+
+    // The link created in beforeEach is at top=50 and gets label 'a' in link mode
+    const existingLink =
+      document.querySelector<HTMLAnchorElement>('a[href="https://example.com"]')!;
+    const clickSpy = vi.spyOn(existingLink, 'click');
+
+    pressKey('f'); // activate
+    pressKey('B', { shiftKey: true }); // form mode
+    const shiftL = pressKey('L', { shiftKey: true }); // switch back to link mode
+    expect(shiftL.defaultPrevented).toBe(true);
+
+    // Should now be in link mode – typing 'a' selects the first link
+    pressKey('a');
+    expect(clickSpy).toHaveBeenCalled();
+  });
 });
