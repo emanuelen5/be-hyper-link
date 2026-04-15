@@ -5,7 +5,7 @@
  * The required layout is:
  *   ## [Unreleased]
  *   <!-- releases -->
- *   … unreleased content …
+ *   ... unreleased content ...
  *   <!-- released -->
  *   ## [x.y.z] - date
  */
