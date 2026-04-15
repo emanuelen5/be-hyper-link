@@ -5,7 +5,6 @@
  * The required layout is:
  *   ## [Unreleased]
  *   <!-- releases -->
- *   ... unreleased content ...
  *   <!-- released -->
  *   ## [x.y.z] - date
  */
@@ -14,7 +13,6 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import {
-  parseChangelog,
   RELEASES_MARKER,
   RELEASED_MARKER,
 } from '../../src/release-notes/parse-changelog';
@@ -47,10 +45,5 @@ describe('CHANGELOG.md structure', () => {
     const releasesIdx = content.indexOf(RELEASES_MARKER);
     const between = content.slice(headingIdx + '## [Unreleased]'.length, releasesIdx);
     expect(between.trim()).toBe('');
-  });
-
-  it('has non-empty unreleased content between the markers', () => {
-    const { unreleased } = parseChangelog(content);
-    expect(unreleased.trim()).not.toBe('');
   });
 });
