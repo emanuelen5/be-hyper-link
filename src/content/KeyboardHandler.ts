@@ -390,7 +390,7 @@ export class KeyboardHandler {
     if (e.key === 'Escape') {
       this.deactivate();
       return;
-    } else if (e.key === 'L' && e.shiftKey) {
+    } else if (e.key === 'B' && e.shiftKey) {
       interceptEvent(e);
       this.enterLinkMode();
       return;

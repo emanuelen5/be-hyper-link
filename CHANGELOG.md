@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Trigger key now accepts modifier combinations (e.g. `ctrl+/`, `ctrl+shift+f`); click the field then press the desired key combo to set it
-- Form navigation submode: press `Shift+B` while the overlay is active to label and navigate buttons, inputs, textareas, and select elements. Selecting a text input or textarea focuses it for editing; pressing `Escape` while the field is focused blurs it and deactivates the overlay. Press `Shift+L` while in form mode to switch back to link mode.
+- Form navigation submode: press `Shift+B` while the overlay is active to label and navigate buttons, inputs, textareas, and select elements. Selecting a text input or textarea focuses it for editing; pressing `Escape` while the field is focused blurs it and deactivates the overlay. Press `Shift+B` again while in form mode to toggle back to link mode.
 
 ### Changed
 - Settings are now saved immediately when any option is changed; the Save button has been removed

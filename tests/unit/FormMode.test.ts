@@ -243,7 +243,7 @@ describe('Form Mode', () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it('switches back to link mode on Shift+L in form mode', () => {
+  it('switches back to link mode on second Shift+B in form mode', () => {
     createButton('Submit', 100);
 
     // The link created in beforeEach is at top=50 and gets label 'a' in link mode
@@ -253,8 +253,8 @@ describe('Form Mode', () => {
 
     pressKey('f'); // activate
     pressKey('B', { shiftKey: true }); // form mode
-    const shiftL = pressKey('L', { shiftKey: true }); // switch back to link mode
-    expect(shiftL.defaultPrevented).toBe(true);
+    const shiftB = pressKey('B', { shiftKey: true }); // toggle back to link mode
+    expect(shiftB.defaultPrevented).toBe(true);
 
     // Should now be in link mode – typing 'a' selects the first link
     pressKey('a');
