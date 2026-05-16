@@ -1,6 +1,6 @@
 {
   "name": "hyper-link",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Navigate links using only the keyboard",
   "license": "GPL-3.0-only",
   "private": true,
