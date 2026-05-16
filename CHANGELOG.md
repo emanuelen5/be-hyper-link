@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 <!-- releases -->
 
+<!-- released -->
+
+## [1.0.0] - 2026-05-16
+
 <!-- releases -->
 
 ### Added
@@ -27,8 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `<a>` tags without an `href` attribute are now handled as buttons in form navigation mode
 - Key events no longer leak to the page when pressing some keys that should be intercepted by the plugin
 - Labels are relabeled to uniform length when scrolling reveals enough new links to cross a length boundary
-
-<!-- released -->
 
 ## [0.1.0] - 2026-03-16
 
