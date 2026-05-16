@@ -11,21 +11,25 @@ export function Toast({ message, trigger }: ToastProps) {
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
   const fadeTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => {
-    if (trigger === 0) return;
-    setMounted(true);
-    clearTimeout(hideTimer.current);
-    clearTimeout(fadeTimer.current);
-    requestAnimationFrame(() => setVisible(true));
-    hideTimer.current = setTimeout(() => {
-      setVisible(false);
-      fadeTimer.current = setTimeout(() => setMounted(false), 300);
-    }, 1000);
-    return () => {
+  useEffect(
+    function autoHideAfterTimeout() {
+      if (trigger === 0) return;
+      setMounted(true);
       clearTimeout(hideTimer.current);
       clearTimeout(fadeTimer.current);
-    };
-  }, [trigger]);
+      requestAnimationFrame(() => setVisible(true));
+      hideTimer.current = setTimeout(() => {
+        setVisible(false);
+        fadeTimer.current = setTimeout(() => setMounted(false), 300);
+      }, 1000);
+
+      return function cleanUpTimers() {
+        clearTimeout(hideTimer.current);
+        clearTimeout(fadeTimer.current);
+      };
+    },
+    [trigger],
+  );
 
   if (!mounted) return null;
 
