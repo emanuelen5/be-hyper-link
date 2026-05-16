@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 import { KeyboardHandler } from './KeyboardHandler';
-import { DEFAULT_SETTINGS } from '../shared/types';
+import { DEFAULT_SETTINGS, isMessageOfType } from '../shared/types';
 import type { Settings } from '../shared/types';
 
 let handler: KeyboardHandler | null = null;
@@ -26,14 +26,8 @@ browser.storage.local
 
 // Listen for settings updates from popup
 browser.runtime.onMessage.addListener((message: unknown) => {
-  if (
-    message &&
-    typeof message === 'object' &&
-    (message as Record<string, unknown>)['type'] === 'settings-updated'
-  ) {
-    const updated = (message as Record<string, unknown>)[
-      'settings'
-    ] as Settings;
+  if (isMessageOfType(message, 'settings-updated')) {
+    const updated = message['settings'] as Settings;
     handler?.updateSettings(updated);
   }
 });

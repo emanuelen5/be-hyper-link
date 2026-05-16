@@ -1,5 +1,5 @@
 import browser from 'webextension-polyfill';
-import { DEFAULT_SETTINGS } from '../shared/types';
+import { DEFAULT_SETTINGS, isMessageOfType } from '../shared/types';
 import type { Settings } from '../shared/types';
 
 // Initialize settings if not present
@@ -12,14 +12,8 @@ browser.storage.local.get('settings').then((result) => {
 // Relay settings updates to all content scripts in the active tab
 browser.runtime.onMessage.addListener(
   (message: unknown, _sender, sendResponse) => {
-    if (
-      message &&
-      typeof message === 'object' &&
-      (message as Record<string, unknown>)['type'] === 'save-settings'
-    ) {
-      const settings = (message as Record<string, unknown>)[
-        'settings'
-      ] as Settings;
+    if (isMessageOfType(message, 'save-settings')) {
+      const settings = message['settings'] as Settings;
       browser.storage.local.set({ settings }).then(() => {
         // Notify all tabs
         browser.tabs.query({}).then((tabs) => {
