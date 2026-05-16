@@ -91,69 +91,6 @@ export class KeyboardHandler {
     this.deactivate();
   }
 
-  private buildLinkInfos(elements: HTMLElement[]): LinkInfo[] {
-    const labels = generateLabels(elements.length);
-    return elements.map((el, i) => ({
-      element: el,
-      label: labels[i],
-      rect: el.getBoundingClientRect(),
-    }));
-  }
-
-  private resetModeState(): void {
-    this.typed = '';
-    this.regionLinks = null;
-    this.searchQuery = '';
-    this.searchSelectedIndex = -1;
-  }
-
-  private handleBackspace(): void {
-    if (this.typed.length === 0) {
-      this.deactivate();
-    } else {
-      this.typed = this.typed.slice(0, -1);
-      this.updateOverlay();
-    }
-  }
-
-  private handleScroll(): void {
-    if (this.settings.refreshLinksOnScroll && this.state !== 'form') {
-      this.refreshLinks();
-    } else {
-      this.refreshRects();
-    }
-    this.updateOverlay();
-  }
-
-  private refreshRects(): void {
-    for (const link of this.links) {
-      link.rect = link.element.getBoundingClientRect();
-    }
-  }
-
-  private refreshLinks(): void {
-    const anchors = getVisibleLinks();
-    const existingElements = new Set(this.links.map((l) => l.element));
-    const newAnchors = anchors.filter((el) => !existingElements.has(el));
-
-    // Update rects for existing links
-    this.refreshRects();
-
-    if (newAnchors.length > 0) {
-      const newLabels = generateLabels(
-        this.links.length + newAnchors.length,
-      ).slice(this.links.length);
-
-      const newLinks: LinkInfo[] = newAnchors.map((el, i) => ({
-        element: el,
-        label: newLabels[i],
-        rect: el.getBoundingClientRect(),
-      }));
-
-      this.links.push(...newLinks);
-      this.highlightManager?.apply(this.links);
-    }
-  }
 
   private activate(): void {
     this.links = this.buildLinkInfos(getVisibleLinks());
@@ -216,36 +153,60 @@ export class KeyboardHandler {
     this.state = 'active';
   }
 
+  private exitSearchMode(): void {
+    this.state = 'active';
+    this.highlightManager?.apply(this.links);
+    this.updateOverlay();
+  }
+
+  private exitSearchSelectingMode(): void {
+    this.state = 'searching';
+    this.searchSelectedIndex = -1;
+    if (this.searchQuery.length > 0) {
+      this.searchQuery = this.searchQuery.slice(0, -1);
+    }
+    this.updateSearchHighlights();
+    this.updateOverlay();
+  }
+
+  private enterFormFocusedMode(el: HTMLElement): void {
+    this.overlay?.destroy();
+    this.overlay = null;
+    this.highlightManager?.clear();
+    this.highlightManager = null;
+    this.focusedFormElement = el;
+    this.state = 'form-focused';
+    el.focus();
+  }
+
   private handleKeydown(e: KeyboardEvent): void {
-    if (this.state === 'idle') {
-      if (matchesTriggerKey(e, this.settings.trigger) && !isFocusedOnInput()) {
-        e.preventDefault();
-        this.activate();
-      }
-      return;
+    switch (this.state) {
+      case 'idle':
+        if (
+          matchesTriggerKey(e, this.settings.trigger) &&
+          !isFocusedOnInput()
+        ) {
+          e.preventDefault();
+          this.activate();
+        }
+        return;
+      case 'active':
+      case 'typing':
+        this.handleActiveKeydown(e);
+        return;
+      case 'searching':
+        this.handleSearchKeydown(e);
+        return;
+      case 'search-selecting':
+        this.handleSearchSelectingKeydown(e);
+        return;
+      case 'form':
+        this.handleFormKeydown(e);
+        return;
+      case 'form-focused':
+        this.handleFormFocusedKeydown(e);
+        return;
     }
-
-    if (this.state === 'searching') {
-      this.handleSearchKeydown(e);
-      return;
-    }
-
-    if (this.state === 'search-selecting') {
-      this.handleSearchSelectingKeydown(e);
-      return;
-    }
-
-    if (this.state === 'form') {
-      this.handleFormKeydown(e);
-      return;
-    }
-
-    if (this.state === 'form-focused') {
-      this.handleFormFocusedKeydown(e);
-      return;
-    }
-
-    this.handleActiveKeydown(e);
   }
 
   private handleActiveKeydown(e: KeyboardEvent): void {
@@ -294,10 +255,7 @@ export class KeyboardHandler {
 
     if (e.key === 'Backspace') {
       if (this.searchQuery.length === 0) {
-        // Go back to active/label mode
-        this.state = 'active';
-        this.highlightManager?.apply(this.links);
-        this.updateOverlay();
+        this.exitSearchMode();
       } else {
         this.searchQuery = this.searchQuery.slice(0, -1);
         this.updateSearchHighlights();
@@ -334,13 +292,7 @@ export class KeyboardHandler {
     }
 
     if (e.key === 'Backspace') {
-      this.state = 'searching';
-      this.searchSelectedIndex = -1;
-      if (this.searchQuery.length > 0) {
-        this.searchQuery = this.searchQuery.slice(0, -1);
-      }
-      this.updateSearchHighlights();
-      this.updateOverlay();
+      this.exitSearchSelectingMode();
       return;
     }
 
@@ -387,36 +339,6 @@ export class KeyboardHandler {
     interceptEvent(e);
   }
 
-  private handleFormKey(key: string): void {
-    this.typeLabelKey(key, (el) => this.activateFormElement(el));
-  }
-
-  private isClickableFormElement(el: HTMLElement): boolean {
-    if (el.tagName === 'BUTTON') return true;
-    if (el.tagName === 'A') return true;
-    if (el.getAttribute('role') === 'button') return true;
-    const inputType = ((el as HTMLInputElement).type ?? '').toLowerCase();
-    return ['submit', 'button', 'reset', 'checkbox', 'radio'].includes(
-      inputType,
-    );
-  }
-
-  private activateFormElement(el: HTMLElement): void {
-    if (this.isClickableFormElement(el)) {
-      this.deactivate();
-      el.click();
-    } else {
-      // Keep the extension active in form-focused state so Escape can blur
-      this.overlay?.destroy();
-      this.overlay = null;
-      this.highlightManager?.clear();
-      this.highlightManager = null;
-      this.focusedFormElement = el;
-      this.state = 'form-focused';
-      el.focus();
-    }
-  }
-
   private handleFormFocusedKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
       interceptEvent(e);
@@ -426,36 +348,13 @@ export class KeyboardHandler {
     // All other keys pass through to the focused input
   }
 
-  private updateSearchHighlights(): void {
-    const matches = searchLinks(this.links, this.searchQuery);
-    const matchedElements = new Set(matches.map((m) => m.element));
-    const selectedElement =
-      this.state === 'search-selecting' && matches[this.searchSelectedIndex]
-        ? matches[this.searchSelectedIndex].element
-        : null;
-    this.highlightManager?.applySearchHighlights(
-      this.links,
-      matchedElements,
-      selectedElement,
-    );
-  }
-
-  private typeLabelKey(key: string, action: (el: HTMLElement) => void): void {
-    this.typed += key;
-    const matches = filterLabels(this.links, this.typed);
-    if (matches.length === 0) {
+  private handleBackspace(): void {
+    if (this.typed.length === 0) {
       this.deactivate();
-      return;
+    } else {
+      this.typed = this.typed.slice(0, -1);
+      this.updateOverlay();
     }
-    if (
-      matches.length === 1 &&
-      matches[0].label === this.typed &&
-      !this.settings.confirmBeforeFollow
-    ) {
-      action(matches[0].element);
-      return;
-    }
-    this.updateOverlay();
   }
 
   private handleSequentialKey(key: string): void {
@@ -483,15 +382,61 @@ export class KeyboardHandler {
     this.handleSequentialKey(key);
   }
 
-  private getOverlayMode(): OverlayMode {
-    if (this.state === 'searching' || this.state === 'search-selecting') {
-      return {
-        kind: 'search',
-        query: this.searchQuery,
-        selectedIndex: this.searchSelectedIndex,
-      };
+  private handleFormKey(key: string): void {
+    this.typeLabelKey(key, (el) => this.activateFormElement(el));
+  }
+
+  private typeLabelKey(key: string, action: (el: HTMLElement) => void): void {
+    this.typed += key;
+    const matches = filterLabels(this.links, this.typed);
+    if (matches.length === 0) {
+      this.deactivate();
+      return;
     }
-    return { kind: 'label', typed: this.typed };
+    if (
+      matches.length === 1 &&
+      matches[0].label === this.typed &&
+      !this.settings.confirmBeforeFollow
+    ) {
+      action(matches[0].element);
+      return;
+    }
+    this.updateOverlay();
+  }
+
+  private followLink(el: HTMLElement): void {
+    this.deactivate();
+    el.click();
+  }
+
+  private activateFormElement(el: HTMLElement): void {
+    if (this.isClickableFormElement(el)) {
+      this.deactivate();
+      el.click();
+    } else {
+      this.enterFormFocusedMode(el);
+    }
+  }
+
+  private isClickableFormElement(el: HTMLElement): boolean {
+    if (el.tagName === 'BUTTON') return true;
+    if (el.tagName === 'A') return true;
+    if (el.getAttribute('role') === 'button') return true;
+    const inputType = ((el as HTMLInputElement).type ?? '').toLowerCase();
+    return ['submit', 'button', 'reset', 'checkbox', 'radio'].includes(
+      inputType,
+    );
+  }
+
+  // ── UI updates ────────────────────────────────────────────────────
+
+  private handleScroll(): void {
+    if (this.settings.refreshLinksOnScroll && this.state !== 'form') {
+      this.refreshLinks();
+    } else {
+      this.refreshRects();
+    }
+    this.updateOverlay();
   }
 
   private updateOverlay(): void {
@@ -503,8 +448,73 @@ export class KeyboardHandler {
     this.overlay?.render(links, mode);
   }
 
-  private followLink(el: HTMLElement): void {
-    this.deactivate();
-    el.click();
+  private updateSearchHighlights(): void {
+    const matches = searchLinks(this.links, this.searchQuery);
+    const matchedElements = new Set(matches.map((m) => m.element));
+    const selectedElement =
+      this.state === 'search-selecting' && matches[this.searchSelectedIndex]
+        ? matches[this.searchSelectedIndex].element
+        : null;
+    this.highlightManager?.applySearchHighlights(
+      this.links,
+      matchedElements,
+      selectedElement,
+    );
+  }
+
+  private refreshLinks(): void {
+    const anchors = getVisibleLinks();
+    const existingElements = new Set(this.links.map((l) => l.element));
+    const newAnchors = anchors.filter((el) => !existingElements.has(el));
+
+    this.refreshRects();
+
+    if (newAnchors.length > 0) {
+      const newLabels = generateLabels(
+        this.links.length + newAnchors.length,
+      ).slice(this.links.length);
+
+      const newLinks: LinkInfo[] = newAnchors.map((el, i) => ({
+        element: el,
+        label: newLabels[i],
+        rect: el.getBoundingClientRect(),
+      }));
+
+      this.links.push(...newLinks);
+      this.highlightManager?.apply(this.links);
+    }
+  }
+
+  private refreshRects(): void {
+    for (const link of this.links) {
+      link.rect = link.element.getBoundingClientRect();
+    }
+  }
+
+  private buildLinkInfos(elements: HTMLElement[]): LinkInfo[] {
+    const labels = generateLabels(elements.length);
+    return elements.map((el, i) => ({
+      element: el,
+      label: labels[i],
+      rect: el.getBoundingClientRect(),
+    }));
+  }
+
+  private resetModeState(): void {
+    this.typed = '';
+    this.regionLinks = null;
+    this.searchQuery = '';
+    this.searchSelectedIndex = -1;
+  }
+
+  private getOverlayMode(): OverlayMode {
+    if (this.state === 'searching' || this.state === 'search-selecting') {
+      return {
+        kind: 'search',
+        query: this.searchQuery,
+        selectedIndex: this.searchSelectedIndex,
+      };
+    }
+    return { kind: 'label', typed: this.typed };
   }
 }
