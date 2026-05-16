@@ -21,6 +21,10 @@ export function Toast({ message, trigger }: ToastProps) {
       setVisible(false);
       fadeTimer.current = setTimeout(() => setMounted(false), 300);
     }, 1000);
+    return () => {
+      clearTimeout(hideTimer.current);
+      clearTimeout(fadeTimer.current);
+    };
   }, [trigger]);
 
   if (!mounted) return null;
