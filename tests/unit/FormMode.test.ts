@@ -231,6 +231,42 @@ describe('Form Mode', () => {
     expect(clickSpy1).not.toHaveBeenCalled();
   });
 
+  it('does not replace form elements with links on scroll', () => {
+    const btn = createButton('Submit', 100);
+    const clickSpy = vi.spyOn(btn, 'click');
+
+    const scrollSettings: Settings = {
+      ...settings,
+      refreshLinksOnScroll: true,
+    };
+    handler.destroy();
+    handler = new KeyboardHandler(scrollSettings);
+
+    pressKey('f'); // activate
+    pressKey('B', { shiftKey: true }); // form mode
+
+    // Trigger a scroll event
+    window.dispatchEvent(new Event('scroll'));
+
+    // The button should still be selectable via its label
+    pressKey('a');
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it('switches back to link mode on Shift+B in form mode', () => {
+    const link = createLink('https://example2.com', 200);
+    createButton('Submit', 100);
+    const clickSpy = vi.spyOn(link, 'click');
+
+    pressKey('f'); // activate
+    pressKey('B', { shiftKey: true }); // form mode
+    pressKey('B', { shiftKey: true }); // back to link mode
+
+    // The link created in this test is second (label 'b'), after the one from beforeEach
+    pressKey('b');
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
   it('deactivates when typed label has no matches in form mode', () => {
     createButton('Only', 100); // gets label 'a'
 
