@@ -192,6 +192,13 @@ export class KeyboardHandler {
     this.updateOverlay();
   }
 
+  private enterSearchSelectingMode(): void {
+    this.state = 'search-selecting';
+    this.searchSelectedIndex = 0;
+    this.updateSearchHighlights();
+    this.updateOverlay();
+  }
+
   private enterFormMode(): void {
     this.links = this.buildLinkInfos(getVisibleFormElements());
     this.typed = '';
@@ -280,11 +287,7 @@ export class KeyboardHandler {
     if (e.key === 'Enter') {
       const matches = searchLinks(this.links, this.searchQuery);
       if (matches.length >= 1) {
-        // Enter search-selecting mode to tab through matches
-        this.state = 'search-selecting';
-        this.searchSelectedIndex = 0;
-        this.updateSearchHighlights();
-        this.updateOverlay();
+        this.enterSearchSelectingMode();
       }
       return;
     }
@@ -308,9 +311,8 @@ export class KeyboardHandler {
       this.searchQuery += e.key;
       const matches = searchLinks(this.links, this.searchQuery);
       if (matches.length === 1) {
-        // Single match: highlight it green and wait for Enter
-        this.state = 'search-selecting';
-        this.searchSelectedIndex = 0;
+        this.enterSearchSelectingMode();
+        return;
       }
       this.updateSearchHighlights();
       this.updateOverlay();
