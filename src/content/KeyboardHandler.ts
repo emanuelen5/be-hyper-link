@@ -439,6 +439,7 @@ export class KeyboardHandler {
 
   private isClickableFormElement(el: HTMLElement): boolean {
     if (el.tagName === 'BUTTON') return true;
+    if (el.tagName === 'A') return true;
     if (el.getAttribute('role') === 'button') return true;
     const inputType = ((el as HTMLInputElement).type ?? '').toLowerCase();
     return ['submit', 'button', 'reset', 'checkbox', 'radio'].includes(
