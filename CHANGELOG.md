@@ -8,19 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 <!-- releases -->
 
+<!-- releases -->
+
 ### Added
+
 - Trigger key now accepts modifier combinations (e.g. `ctrl+/`, `ctrl+shift+f`); click the field then press the desired key combo to set it
 - Form navigation submode: press `Shift+B` while the overlay is active to label and navigate buttons, inputs, textareas, and select elements. Selecting a text input or textarea focuses it for editing; pressing `Escape` while the field is focused blurs it and deactivates the overlay. Press `Shift+B` again while in form mode to toggle back to link mode.
 
 ### Changed
+
 - Settings are now saved immediately when any option is changed; the Save button has been removed
 - Search box now uses fuzzy matching: words separated by spaces are matched independently (in any order) against link text
+- Labels are now prefix-free: all labels have the same length (e.g. all two-letter when there are more than 26 links), so no label is a prefix of another
+
+### Fixed
+
+- Scrolling no longer resets the active navigation mode
+- `<a>` tags without an `href` attribute are now handled as buttons in form navigation mode
+- Key events no longer leak to the page when pressing some keys that should be intercepted by the plugin
+- Labels are relabeled to uniform length when scrolling reveals enough new links to cross a length boundary
 
 <!-- released -->
 
 ## [0.1.0] - 2026-03-16
 
 ### Added
+
 - Keyboard-based link navigation activated by a configurable trigger key (`/` by default)
 - Two navigation modes: sequential (letter combinations) and keyboard-region (keyboard rows map to screen regions)
 - Text-based link search with Tab / Shift+Tab to cycle results
