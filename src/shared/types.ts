@@ -47,3 +47,14 @@ export interface LinkInfo {
 export type OverlayMode =
   | { kind: 'label'; typed: string }
   | { kind: 'search'; query: string; selectedIndex: number };
+
+export function isMessageOfType(
+  msg: unknown,
+  type: string,
+): msg is Record<string, unknown> {
+  return (
+    msg != null &&
+    typeof msg === 'object' &&
+    (msg as Record<string, unknown>)['type'] === type
+  );
+}
