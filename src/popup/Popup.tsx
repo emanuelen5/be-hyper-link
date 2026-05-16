@@ -34,20 +34,17 @@ export function Popup() {
     e.preventDefault();
     e.stopPropagation();
     if (MODIFIER_KEYS.includes(e.key)) return;
-    if (e.key === 'Escape') {
-      setCapturingKey(false);
-      (e.target as HTMLInputElement).blur();
-      return;
+    if (e.key !== 'Escape') {
+      updateSettings({
+        trigger: {
+          key: e.key,
+          ctrl: e.ctrlKey,
+          alt: e.altKey,
+          shift: e.shiftKey,
+          meta: e.metaKey,
+        },
+      });
     }
-    updateSettings({
-      trigger: {
-        key: e.key,
-        ctrl: e.ctrlKey,
-        alt: e.altKey,
-        shift: e.shiftKey,
-        meta: e.metaKey,
-      },
-    });
     setCapturingKey(false);
     (e.target as HTMLInputElement).blur();
   }
