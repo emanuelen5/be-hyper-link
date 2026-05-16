@@ -242,24 +242,17 @@ export class KeyboardHandler {
 
     if (e.key === 'Escape') {
       this.deactivate();
-      return;
     } else if (e.key === this.settings.searchKey) {
-      interceptEvent(e);
       this.enterSearchMode();
-      return;
     } else if (e.key === 'B' && e.shiftKey) {
-      interceptEvent(e);
       this.enterFormMode();
-      return;
     } else if (e.key === 'Enter') {
       const matches = filterLabels(this.links, this.typed);
       if (matches.length === 1) {
         this.followLink(matches[0].element);
       }
-      return;
     } else if (e.key === 'Backspace') {
       this.handleBackspace();
-      return;
     } else if (e.key.length === 1 && e.key >= 'a' && e.key <= 'z') {
       if (this.settings.navigationMode === 'keyboard-region') {
         this.handleKeyboardRegionKey(e.key);
@@ -372,26 +365,22 @@ export class KeyboardHandler {
   private handleFormKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
       this.deactivate();
-      return;
     } else if (e.key === 'B' && e.shiftKey) {
-      interceptEvent(e);
       this.enterLinkMode();
-      return;
     } else if (e.key === 'Backspace') {
-      interceptEvent(e);
       this.handleBackspace();
-      return;
     } else if (e.key === 'Enter') {
-      interceptEvent(e);
       const matches = filterLabels(this.links, this.typed);
       if (matches.length === 1) {
         this.activateFormElement(matches[0].element);
       }
-      return;
     } else if (e.key.length === 1 && e.key >= 'a' && e.key <= 'z') {
-      interceptEvent(e);
       this.handleFormKey(e.key);
+    } else {
+      return;
     }
+
+    interceptEvent(e);
   }
 
   private handleFormKey(key: string): void {
