@@ -238,8 +238,10 @@ export class KeyboardHandler {
       return;
     }
 
-    // Active or typing state
+    this.handleActiveKeydown(e);
+  }
 
+  private handleActiveKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
       this.deactivate();
     } else if (e.key === this.settings.searchKey) {
