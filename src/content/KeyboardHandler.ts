@@ -91,6 +91,45 @@ export class KeyboardHandler {
     this.deactivate();
   }
 
+  private setState(newState: State): void {
+    const prevState = this.state;
+    if (prevState === newState) return;
+    this.onExitState(prevState);
+    this.state = newState;
+    this.onEnterState(newState);
+  }
+
+  private onExitState(state: State): void {
+    switch (state) {
+      case 'form-focused':
+        this.focusedFormElement?.blur();
+        this.focusedFormElement = null;
+        break;
+    }
+  }
+
+  private onEnterState(state: State): void {
+    switch (state) {
+      case 'idle':
+        window.removeEventListener('scroll', this.boundScroll, {
+          capture: true,
+        });
+        this.overlay?.destroy();
+        this.overlay = null;
+        this.highlightManager?.clear();
+        this.highlightManager = null;
+        this.links = [];
+        this.resetModeState();
+        break;
+      case 'form-focused':
+        this.overlay?.destroy();
+        this.overlay = null;
+        this.highlightManager?.clear();
+        this.highlightManager = null;
+        this.focusedFormElement?.focus();
+        break;
+    }
+  }
 
   private activate(): void {
     this.links = this.buildLinkInfos(getVisibleLinks());
@@ -106,32 +145,40 @@ export class KeyboardHandler {
       capture: true,
       passive: true,
     });
-    this.state = 'active';
+    this.setState('active');
   }
 
   private deactivate(): void {
-    window.removeEventListener('scroll', this.boundScroll, { capture: true });
-    this.overlay?.destroy();
-    this.overlay = null;
-    this.highlightManager?.clear();
-    this.highlightManager = null;
-    this.links = [];
-    this.resetModeState();
-    this.focusedFormElement = null;
-    this.state = 'idle';
+    this.setState('idle');
   }
 
   private enterSearchMode(): void {
-    this.state = 'searching';
     this.searchQuery = '';
     this.searchSelectedIndex = -1;
+    this.setState('searching');
     this.updateSearchHighlights();
     this.updateOverlay();
   }
 
   private enterSearchSelectingMode(): void {
-    this.state = 'search-selecting';
     this.searchSelectedIndex = 0;
+    this.setState('search-selecting');
+    this.updateSearchHighlights();
+    this.updateOverlay();
+  }
+
+  private exitSearchMode(): void {
+    this.setState('active');
+    this.highlightManager?.apply(this.links);
+    this.updateOverlay();
+  }
+
+  private exitSearchSelectingMode(): void {
+    this.searchSelectedIndex = -1;
+    if (this.searchQuery.length > 0) {
+      this.searchQuery = this.searchQuery.slice(0, -1);
+    }
+    this.setState('searching');
     this.updateSearchHighlights();
     this.updateOverlay();
   }
@@ -141,7 +188,7 @@ export class KeyboardHandler {
     this.typed = '';
     this.highlightManager?.apply(this.links);
     this.overlay?.render(this.links, { kind: 'label', typed: '' });
-    this.state = 'form';
+    this.setState('form');
   }
 
   private enterLinkMode(): void {
@@ -150,33 +197,12 @@ export class KeyboardHandler {
     this.regionLinks = null;
     this.highlightManager?.apply(this.links);
     this.overlay?.render(this.links, { kind: 'label', typed: '' });
-    this.state = 'active';
-  }
-
-  private exitSearchMode(): void {
-    this.state = 'active';
-    this.highlightManager?.apply(this.links);
-    this.updateOverlay();
-  }
-
-  private exitSearchSelectingMode(): void {
-    this.state = 'searching';
-    this.searchSelectedIndex = -1;
-    if (this.searchQuery.length > 0) {
-      this.searchQuery = this.searchQuery.slice(0, -1);
-    }
-    this.updateSearchHighlights();
-    this.updateOverlay();
+    this.setState('active');
   }
 
   private enterFormFocusedMode(el: HTMLElement): void {
-    this.overlay?.destroy();
-    this.overlay = null;
-    this.highlightManager?.clear();
-    this.highlightManager = null;
     this.focusedFormElement = el;
-    this.state = 'form-focused';
-    el.focus();
+    this.setState('form-focused');
   }
 
   private handleKeydown(e: KeyboardEvent): void {
@@ -342,7 +368,6 @@ export class KeyboardHandler {
   private handleFormFocusedKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
       interceptEvent(e);
-      this.focusedFormElement?.blur();
       this.deactivate();
     }
     // All other keys pass through to the focused input
@@ -358,7 +383,7 @@ export class KeyboardHandler {
   }
 
   private handleSequentialKey(key: string): void {
-    this.state = 'typing';
+    this.setState('typing');
     this.typeLabelKey(key, (el) => this.followLink(el));
   }
 
