@@ -495,13 +495,17 @@ export class KeyboardHandler {
     this.refreshRects();
 
     if (newAnchors.length > 0) {
-      const newLabels = generateLabels(
-        this.links.length + newAnchors.length,
-      ).slice(this.links.length);
+      const totalCount = this.links.length + newAnchors.length;
+      const allLabels = generateLabels(totalCount);
+
+      // Relabel existing links (label length may have changed)
+      for (let i = 0; i < this.links.length; i++) {
+        this.links[i].label = allLabels[i];
+      }
 
       const newLinks: LinkInfo[] = newAnchors.map((el, i) => ({
         element: el,
-        label: newLabels[i],
+        label: allLabels[this.links.length + i],
         rect: el.getBoundingClientRect(),
       }));
 
