@@ -165,6 +165,20 @@ describe('Form Mode', () => {
     expect(clickSpy).toHaveBeenCalled();
   });
 
+  it('clicks an anchor without href (button-like) when its label is typed', () => {
+    const a = document.createElement('a');
+    a.className = 'btn btn-primary';
+    a.textContent = 'Add first remix';
+    document.body.appendChild(a);
+    mockVisible(a, 100);
+    const clickSpy = vi.spyOn(a, 'click');
+
+    pressKey('f'); // activate
+    pressKey('B', { shiftKey: true }); // form mode
+    pressKey('a');
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
   it('deactivates on Escape in form mode (before selection)', () => {
     createButton('Cancel', 100);
 

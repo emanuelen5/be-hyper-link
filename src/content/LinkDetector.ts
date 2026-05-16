@@ -28,7 +28,7 @@ export function getVisibleLinks(): HTMLAnchorElement[] {
 
 export function getVisibleFormElements(): HTMLElement[] {
   const FORM_SELECTOR =
-    'button, input:not([type="hidden"]), textarea, select, [role="button"]';
+    'button, input:not([type="hidden"]), textarea, select, [role="button"], a:not([href])';
   const elements = Array.from(
     document.querySelectorAll<HTMLElement>(FORM_SELECTOR),
   );
