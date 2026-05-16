@@ -58,16 +58,7 @@ export class HighlightManager {
   }
 
   private clearSearchHighlights(): void {
-    for (const link of this.borderedLinks) {
-      link.classList.remove(
-        SEARCH_MATCH_CLASS,
-        SEARCH_FADED_CLASS,
-        SEARCH_SELECTED_CLASS,
-      );
-      link.style.removeProperty('outline');
-      link.style.removeProperty('outline-offset');
-    }
-    this.borderedLinks = [];
+    this.clearLinks();
   }
 
   clear(): void {
@@ -75,6 +66,10 @@ export class HighlightManager {
       this.tintEl.remove();
       this.tintEl = null;
     }
+    this.clearLinks();
+  }
+
+  private clearLinks(): void {
     for (const link of this.borderedLinks) {
       link.classList.remove(
         BORDER_CLASS,
