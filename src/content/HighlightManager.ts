@@ -39,7 +39,7 @@ export class HighlightManager {
     matchedElements: Set<HTMLElement>,
     selectedElement: HTMLElement | null,
   ): void {
-    this.clearSearchHighlights();
+    this.clearLinks();
 
     for (const { element } of allLinks) {
       if (element === selectedElement) {
@@ -55,10 +55,6 @@ export class HighlightManager {
       }
       this.borderedLinks.push(element);
     }
-  }
-
-  private clearSearchHighlights(): void {
-    this.clearLinks();
   }
 
   clear(): void {
