@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateLabels, labelsMatch } from '../../src/content/LabelGenerator';
-import { filterLabels } from '../../src/utils/label-utils';
+import { generateLabels } from '../../src/content/LabelGenerator';
+import { filterLabels, labelsMatch } from '../../src/utils/label-utils';
 
 describe('generateLabels', () => {
   it('generates single-letter labels for the first 26', () => {

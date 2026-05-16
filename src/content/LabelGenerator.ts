@@ -1,7 +1,3 @@
-import { labelsMatch } from '../utils/label-utils';
-
-export { labelsMatch };
-
 const CHARS = 'abcdefghijklmnopqrstuvwxyz';
 
 /**
