@@ -87,22 +87,10 @@ function SearchOverlayRoot({
   query,
   selectedIndex,
 }: SearchOverlayProps) {
-  const words = query
-    .toLowerCase()
-    .split(' ')
-    .filter((w) => w.length > 0);
-  const matches =
-    words.length > 0
-      ? links.filter((l) => {
-          const text = (l.element.textContent ?? '').trim().toLowerCase();
-          return words.every((w) => text.includes(w));
-        })
-      : links;
-
   return (
     <>
       <SearchBar query={query} />
-      {matches.map((info, i) => {
+      {links.map((info, i) => {
         const isSelected = selectedIndex >= 0 && i === selectedIndex;
         return (
           <SearchMatchBadge
