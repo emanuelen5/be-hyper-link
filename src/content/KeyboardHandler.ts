@@ -98,7 +98,7 @@ export class KeyboardHandler {
   }
 
   private handleScroll(): void {
-    if (this.settings.refreshLinksOnScroll) {
+    if (this.settings.refreshLinksOnScroll && this.state !== 'form') {
       this.refreshLinks();
     } else {
       this.refreshRects();
@@ -214,6 +214,7 @@ export class KeyboardHandler {
     }));
 
     this.typed = '';
+    this.regionLinks = null;
     this.highlightManager?.apply(this.links);
     this.overlay?.render(this.links, { kind: 'label', typed: '' });
     this.state = 'active';
