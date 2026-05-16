@@ -6,7 +6,8 @@ import type {
   TriggerKey,
 } from '../shared/types';
 import { HighlightManager } from './HighlightManager';
-import { generateLabels, labelsMatch } from './LabelGenerator';
+import { filterLabels } from '../utils/label-utils';
+import { generateLabels } from './LabelGenerator';
 import { getVisibleFormElements, getVisibleLinks } from './LinkDetector';
 import { Overlay } from './Overlay';
 
@@ -44,10 +45,6 @@ function interceptEvent(e: KeyboardEvent) {
   e.stopPropagation();
 }
 
-function getLinkText(element: HTMLElement): string {
-  return (element.textContent ?? '').trim().toLowerCase();
-}
-
 function searchLinks(links: LinkInfo[], query: string): LinkInfo[] {
   if (!query) return links;
   const words = query
@@ -56,7 +53,7 @@ function searchLinks(links: LinkInfo[], query: string): LinkInfo[] {
     .filter((w) => w.length > 0);
   if (words.length === 0) return links;
   return links.filter((l) => {
-    const text = getLinkText(l.element);
+    const text = (l.element.textContent ?? '').trim().toLowerCase();
     return words.every((w) => text.includes(w));
   });
 }
@@ -68,12 +65,9 @@ export class KeyboardHandler {
   private typed = '';
   private overlay: Overlay | null = null;
   private highlightManager: HighlightManager | null = null;
-  // For keyboard-region mode: first key selects region
   private regionLinks: HTMLElement[] | null = null;
-  // For search mode
   private searchQuery = '';
   private searchSelectedIndex = -1;
-  // For form-focused mode: the currently focused form element
   private focusedFormElement: HTMLElement | null = null;
 
   private boundKeydown: (e: KeyboardEvent) => void;
@@ -95,6 +89,31 @@ export class KeyboardHandler {
       capture: true,
     });
     this.deactivate();
+  }
+
+  private buildLinkInfos(elements: HTMLElement[]): LinkInfo[] {
+    const labels = generateLabels(elements.length);
+    return elements.map((el, i) => ({
+      element: el,
+      label: labels[i],
+      rect: el.getBoundingClientRect(),
+    }));
+  }
+
+  private resetModeState(): void {
+    this.typed = '';
+    this.regionLinks = null;
+    this.searchQuery = '';
+    this.searchSelectedIndex = -1;
+  }
+
+  private handleBackspace(): void {
+    if (this.typed.length === 0) {
+      this.deactivate();
+    } else {
+      this.typed = this.typed.slice(0, -1);
+      this.updateOverlay();
+    }
   }
 
   private handleScroll(): void {
@@ -137,19 +156,8 @@ export class KeyboardHandler {
   }
 
   private activate(): void {
-    const anchors = getVisibleLinks();
-    const labels = generateLabels(anchors.length);
-
-    this.links = anchors.map((el, i) => ({
-      element: el,
-      label: labels[i],
-      rect: el.getBoundingClientRect(),
-    }));
-
-    this.typed = '';
-    this.regionLinks = null;
-    this.searchQuery = '';
-    this.searchSelectedIndex = -1;
+    this.links = this.buildLinkInfos(getVisibleLinks());
+    this.resetModeState();
     this.overlay = new Overlay();
     this.highlightManager = new HighlightManager(
       this.settings.dimEnabled,
@@ -171,10 +179,7 @@ export class KeyboardHandler {
     this.highlightManager?.clear();
     this.highlightManager = null;
     this.links = [];
-    this.typed = '';
-    this.regionLinks = null;
-    this.searchQuery = '';
-    this.searchSelectedIndex = -1;
+    this.resetModeState();
     this.focusedFormElement = null;
     this.state = 'idle';
   }
@@ -188,15 +193,7 @@ export class KeyboardHandler {
   }
 
   private enterFormMode(): void {
-    const elements = getVisibleFormElements();
-    const labels = generateLabels(elements.length);
-
-    this.links = elements.map((el, i) => ({
-      element: el,
-      label: labels[i],
-      rect: el.getBoundingClientRect(),
-    }));
-
+    this.links = this.buildLinkInfos(getVisibleFormElements());
     this.typed = '';
     this.highlightManager?.apply(this.links);
     this.overlay?.render(this.links, { kind: 'label', typed: '' });
@@ -204,15 +201,7 @@ export class KeyboardHandler {
   }
 
   private enterLinkMode(): void {
-    const anchors = getVisibleLinks();
-    const labels = generateLabels(anchors.length);
-
-    this.links = anchors.map((el, i) => ({
-      element: el,
-      label: labels[i],
-      rect: el.getBoundingClientRect(),
-    }));
-
+    this.links = this.buildLinkInfos(getVisibleLinks());
     this.typed = '';
     this.regionLinks = null;
     this.highlightManager?.apply(this.links);
@@ -263,20 +252,13 @@ export class KeyboardHandler {
       this.enterFormMode();
       return;
     } else if (e.key === 'Enter') {
-      const matches = this.links.filter((l) =>
-        labelsMatch(l.label, this.typed),
-      );
+      const matches = filterLabels(this.links, this.typed);
       if (matches.length === 1) {
         this.followLink(matches[0].element);
       }
       return;
     } else if (e.key === 'Backspace') {
-      if (this.typed.length === 0) {
-        this.deactivate();
-      } else {
-        this.typed = this.typed.slice(0, -1);
-        this.updateOverlay();
-      }
+      this.handleBackspace();
       return;
     } else if (e.key.length === 1 && e.key >= 'a' && e.key <= 'z') {
       if (this.settings.navigationMode === 'keyboard-region') {
@@ -397,18 +379,11 @@ export class KeyboardHandler {
       return;
     } else if (e.key === 'Backspace') {
       interceptEvent(e);
-      if (this.typed.length === 0) {
-        this.deactivate();
-      } else {
-        this.typed = this.typed.slice(0, -1);
-        this.updateOverlay();
-      }
+      this.handleBackspace();
       return;
     } else if (e.key === 'Enter') {
       interceptEvent(e);
-      const matches = this.links.filter((l) =>
-        labelsMatch(l.label, this.typed),
-      );
+      const matches = filterLabels(this.links, this.typed);
       if (matches.length === 1) {
         this.activateFormElement(matches[0].element);
       }
@@ -420,21 +395,7 @@ export class KeyboardHandler {
   }
 
   private handleFormKey(key: string): void {
-    this.typed += key;
-    const matches = this.links.filter((l) => labelsMatch(l.label, this.typed));
-    if (matches.length === 0) {
-      this.deactivate();
-      return;
-    }
-    if (
-      matches.length === 1 &&
-      matches[0].label === this.typed &&
-      !this.settings.confirmBeforeFollow
-    ) {
-      this.activateFormElement(matches[0].element);
-      return;
-    }
-    this.updateOverlay();
+    this.typeLabelKey(key, (el) => this.activateFormElement(el));
   }
 
   private isClickableFormElement(el: HTMLElement): boolean {
@@ -486,10 +447,9 @@ export class KeyboardHandler {
     );
   }
 
-  private handleSequentialKey(key: string): void {
+  private typeLabelKey(key: string, action: (el: HTMLElement) => void): void {
     this.typed += key;
-    this.state = 'typing';
-    const matches = this.links.filter((l) => labelsMatch(l.label, this.typed));
+    const matches = filterLabels(this.links, this.typed);
     if (matches.length === 0) {
       this.deactivate();
       return;
@@ -499,10 +459,15 @@ export class KeyboardHandler {
       matches[0].label === this.typed &&
       !this.settings.confirmBeforeFollow
     ) {
-      this.followLink(matches[0].element);
+      action(matches[0].element);
       return;
     }
     this.updateOverlay();
+  }
+
+  private handleSequentialKey(key: string): void {
+    this.state = 'typing';
+    this.typeLabelKey(key, (el) => this.followLink(el));
   }
 
   private handleKeyboardRegionKey(key: string): void {
@@ -515,13 +480,7 @@ export class KeyboardHandler {
       }
       const allAnchors = this.links.map((l) => l.element);
       this.regionLinks = getRegionLinks(allAnchors, region);
-      // Assign new labels within region
-      const labels = generateLabels(this.regionLinks.length);
-      this.links = this.regionLinks.map((el, i) => ({
-        element: el,
-        label: labels[i],
-        rect: el.getBoundingClientRect(),
-      }));
+      this.links = this.buildLinkInfos(this.regionLinks);
       this.typed = '';
       this.updateOverlay();
       return;
@@ -543,7 +502,12 @@ export class KeyboardHandler {
   }
 
   private updateOverlay(): void {
-    this.overlay?.render(this.links, this.getOverlayMode());
+    const mode = this.getOverlayMode();
+    const links =
+      mode.kind === 'search'
+        ? searchLinks(this.links, this.searchQuery)
+        : this.links;
+    this.overlay?.render(links, mode);
   }
 
   private followLink(el: HTMLElement): void {
